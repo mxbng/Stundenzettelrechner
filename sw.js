@@ -1,6 +1,6 @@
 // Offline-Speicher für den WD-Rechner.
 // Bei jeder Änderung an den Dateien die Versionsnummer hochzählen (v1 -> v2 ...).
-const CACHE = 'wd-rechner-v1';
+const CACHE = 'wd-rechner-v2';
 const DATEIEN = [
   './',
   './index.html',
