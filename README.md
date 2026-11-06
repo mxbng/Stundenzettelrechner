@@ -4,12 +4,13 @@ Kleiner Arbeitszeitrechner für den Winterdienst als Web-App. Er läuft im Brows
 
 ## Was er rechnet
 
-- Anwesenheit ab Anruf bis Ende (oder bis jetzt, solange der Einsatz läuft), auch über Mitternacht
+- Anwesenheit ab Anruf bis Ende, auch über Mitternacht; Uhrzeiten nur in Viertelstunden
+  („Jetzt“ rundet den Beginn ab und das Ende auf, ein laufender Einsatz wird bis zur nächsten Viertelstunde gerechnet)
 - Mindestpause nach § 4 ArbZG: mehr als 6 Std. → 30 Min., mehr als 9 Std. → 45 Min.; Pausen zählen in Blöcken ab 15 Min.
   Abgezogen wird gleitend, nur so viel, dass die Grenze nicht überschritten wird (z. B. 6:20 anwesend → 20 Min. Pause → 6:00 netto).
 - Netto-Arbeitszeit in Std:Min und dezimal, Restzeit bis 10 Std. netto (§ 3 ArbZG)
 - Uhrzeiten, zu denen 6 / 8 / 9 / 10 Std. netto erreicht sind
-- Werte für den Stundenzettel (zusätzlich auf ¼ Std. aufgerundet)
+- Werte für den Stundenzettel
 
 ## Auf GitHub Pages stellen
 

@@ -40,9 +40,14 @@
   label, .label { display: block; font-weight: 600; margin-bottom: 6px; }
   .leise { color: var(--leise); font-weight: 400; }
   .zeile { display: flex; gap: 8px; }
-  input[type=time] { flex: 1; min-width: 0; font: inherit; font-size: 1.6rem; font-variant-numeric: tabular-nums;
-    padding: 8px 12px; border-radius: 12px; border: 1px solid var(--rand); background: var(--feld); color: var(--text); min-height: 56px; }
-  input[type=time]:focus { outline: 2px solid var(--akzent); outline-offset: 1px; }
+  .uhrzeit { flex: 1; min-width: 0; display: flex; align-items: center; gap: 2px; padding: 0 6px; min-height: 56px;
+    background: var(--feld); border: 1px solid var(--rand); border-radius: 12px; }
+  .uhrzeit:focus-within { outline: 2px solid var(--akzent); outline-offset: 1px; }
+  .uhrzeit select { flex: 1; min-width: 0; -webkit-appearance: none; appearance: none; background: transparent; border: 0;
+    color: var(--text); font: inherit; font-size: 1.6rem; font-variant-numeric: tabular-nums;
+    text-align: center; text-align-last: center; padding: 8px 0; cursor: pointer; }
+  .uhrzeit select:focus { outline: none; }
+  .doppelpunkt { font-size: 1.6rem; color: var(--leise); }
 
   button { font: inherit; cursor: pointer; border: 0; border-radius: 12px; min-height: 52px; color: var(--text);
     background: #2a323c; padding: 0 16px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
@@ -126,17 +131,25 @@
 
   <section class="card">
     <div class="feld">
-      <label for="anruf">Anruf / Beginn</label>
+      <label for="anrufH">Anruf / Beginn</label>
       <div class="zeile">
-        <input type="time" id="anruf">
+        <div class="uhrzeit">
+          <select id="anrufH" aria-label="Anruf Stunde"></select>
+          <span class="doppelpunkt">:</span>
+          <select id="anrufM" aria-label="Anruf Minute"></select>
+        </div>
         <button class="jetzt" data-ziel="anruf">Jetzt</button>
       </div>
       <p class="hinweis" id="anrufDatum">Die Zeit ab dem Anruf zählt.</p>
     </div>
     <div class="feld">
-      <label for="ende">Ende <span class="leise">– leer lassen, solange der Einsatz läuft</span></label>
+      <label for="endeH">Ende <span class="leise">– leer lassen, solange der Einsatz läuft</span></label>
       <div class="zeile">
-        <input type="time" id="ende">
+        <div class="uhrzeit">
+          <select id="endeH" aria-label="Ende Stunde"></select>
+          <span class="doppelpunkt">:</span>
+          <select id="endeM" aria-label="Ende Minute"></select>
+        </div>
         <button class="jetzt" data-ziel="ende">Jetzt</button>
         <button class="leeren" id="endeLeeren" aria-label="Ende löschen">✕</button>
       </div>
@@ -186,7 +199,6 @@
       <div><dt>Ende</dt><dd id="zEnde"></dd></div>
       <div><dt>Pause</dt><dd id="zPause"></dd></div>
       <div><dt>Arbeitszeit</dt><dd id="zStunden"></dd></div>
-      <div class="neben"><dt>auf ¼ Std. aufgerundet</dt><dd id="zViertel"></dd></div>
     </dl>
   </section>
 
@@ -195,6 +207,7 @@
   <footer>
     <p>Privates Hilfsmittel, keine offizielle Anwendung der Stadt. Ohne Gewähr – maßgeblich sind ZMI und euer Stundenzettel.</p>
     <p>Grundlage: § 3 ArbZG (höchstens 10 Stunden), § 4 ArbZG (mind. 30 Min. Pause bei mehr als 6 Std., 45 Min. bei mehr als 9 Std., aufteilbar in Blöcke von mind. 15 Min.).</p>
+    <p>Uhrzeiten nur in Viertelstunden. „Jetzt“ rundet beim Beginn ab und beim Ende auf; solange der Einsatz läuft, wird bis zur nächsten Viertelstunde gerechnet.</p>
     <p>Alle Eingaben bleiben auf diesem Handy.</p>
   </footer>
 </main>
@@ -230,8 +243,6 @@ function anwesenheitFuer(ziel, pauseWahl) {
   }
   return null;
 }
-
-function viertelAuf(min) { return Math.ceil(min / 15) * 15; }
 // LOGIK-ENDE
 
 const $ = id => document.getElementById(id);
@@ -256,6 +267,28 @@ function uhrMitTag(d, bezug) {
   return uhr(d) + (diff > 0 ? ' <span class="tag">(+' + diff + ' Tag)</span>' : '');
 }
 
+// ---------- Viertelstunden ----------
+const VIERTEL = 15 * 60000;
+const abrunden = d => new Date(Math.floor(d.getTime() / VIERTEL) * VIERTEL);
+const aufrunden = d => new Date(Math.ceil(d.getTime() / VIERTEL) * VIERTEL);
+const minZuText = m => pad(Math.floor(m / 60) % 24) + ':' + pad(m % 60);
+const textAb = v => v ? minZuText(Math.floor(zuMin(v) / 15) * 15) : '';
+const textAuf = v => v ? minZuText(Math.ceil(zuMin(v) / 15) * 15) : '';
+
+// Auswahlfelder: Stunde 00–23, Minute 00/15/30/45
+function fuelle(sel, werte, leer) {
+  sel.innerHTML = (leer ? '<option value="">' + leer + '</option>' : '') +
+    werte.map(w => '<option value="' + w + '">' + w + '</option>').join('');
+}
+const STUNDEN = Array.from({ length: 24 }, (_, i) => pad(i));
+const MINUTEN = ['00', '15', '30', '45'];
+['anruf', 'ende'].forEach(f => { fuelle($(f + 'H'), STUNDEN, '––'); fuelle($(f + 'M'), MINUTEN); });
+const leseZeit = f => $(f + 'H').value ? $(f + 'H').value + ':' + $(f + 'M').value : '';
+function zeigeZeit(f, v) {
+  if (v) { const [h, m] = v.split(':'); $(f + 'H').value = h; $(f + 'M').value = m; }
+  else { $(f + 'H').value = ''; $(f + 'M').value = '00'; }
+}
+
 // ---------- Speicher ----------
 const SPEICHER = 'wd-rechner-v1';
 const LEER = { anruf: '', tag: '', ende: '', pause: 'auto' };
@@ -274,7 +307,7 @@ function setzeAnruf(v) {
     const jetzt = new Date();
     const d = new Date(jetzt);
     // Liegt die Uhrzeit deutlich nach "jetzt", war der Anruf gestern (z. B. 22:00 eingetragen um 02:00)
-    if (zuMin(v) > jetzt.getHours() * 60 + jetzt.getMinutes() + 5) d.setDate(d.getDate() - 1);
+    if (zuMin(v) > jetzt.getHours() * 60 + jetzt.getMinutes() + 30) d.setDate(d.getDate() - 1);
     st.tag = tagStr(d);
   } else {
     st.tag = '';
@@ -283,16 +316,18 @@ function setzeAnruf(v) {
 }
 function setzeEnde(v) { st.ende = v; speichern(); render(); }
 
-['input', 'change'].forEach(ev => {
-  $('anruf').addEventListener(ev, e => setzeAnruf(e.target.value));
-  $('ende').addEventListener(ev, e => setzeEnde(e.target.value));
+['H', 'M'].forEach(t => {
+  $('anruf' + t).addEventListener('change', () => setzeAnruf(leseZeit('anruf')));
+  $('ende' + t).addEventListener('change', () => setzeEnde(leseZeit('ende')));
 });
+// "Jetzt": Beginn auf die Viertelstunde abrunden, Ende aufrunden
 document.querySelectorAll('button.jetzt').forEach(b => b.addEventListener('click', () => {
-  const v = uhr(new Date());
-  $(b.dataset.ziel).value = v;
-  if (b.dataset.ziel === 'anruf') setzeAnruf(v); else setzeEnde(v);
+  const istAnruf = b.dataset.ziel === 'anruf';
+  const v = uhr(istAnruf ? abrunden(new Date()) : aufrunden(new Date()));
+  zeigeZeit(b.dataset.ziel, v);
+  if (istAnruf) setzeAnruf(v); else setzeEnde(v);
 }));
-$('endeLeeren').addEventListener('click', () => { $('ende').value = ''; setzeEnde(''); });
+$('endeLeeren').addEventListener('click', () => { zeigeZeit('ende', ''); setzeEnde(''); });
 
 function chipsZeigen() {
   document.querySelectorAll('#pauseChips button').forEach(b =>
@@ -314,7 +349,7 @@ $('neu').addEventListener('click', () => {
   clearTimeout(neuTimer);
   b.classList.remove('sicher'); b.textContent = 'Neuer Einsatz';
   st = Object.assign({}, LEER);
-  $('anruf').value = ''; $('ende').value = '';
+  zeigeZeit('anruf', ''); zeigeZeit('ende', '');
   speichern(); chipsZeigen(); render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
@@ -333,7 +368,7 @@ function render() {
   const laeuft = !st.ende;
   let ende;
   if (laeuft) {
-    ende = jetzt;
+    ende = aufrunden(jetzt); // läuft noch: bis zur nächsten Viertelstunde rechnen
   } else {
     ende = datumAus(st.tag, st.ende);
     if (ende < start) ende.setDate(ende.getDate() + 1); // über Mitternacht
@@ -388,12 +423,10 @@ function render() {
   $('zDatum').textContent = datumText(start);
   $('zBeginn').textContent = st.anruf + ' Uhr';
   $('zEnde').innerHTML = laeuft
-    ? 'läuft <span class="tag">(jetzt ' + uhr(jetzt) + ')</span>'
+    ? 'läuft <span class="tag">(gerechnet bis ' + uhr(ende) + ')</span>'
     : uhrMitTag(ende, start) + ' Uhr';
   $('zPause').textContent = r.pause + ' Min.';
   $('zStunden').textContent = hmText(r.netto) + ' Std. = ' + dez(r.netto);
-  const v = viertelAuf(r.netto);
-  $('zViertel').textContent = hmText(v) + ' Std. = ' + dez(v);
 }
 
 // ---------- Hinweis "Zum Home-Bildschirm" ----------
@@ -414,8 +447,11 @@ function render() {
 })();
 
 // ---------- Start ----------
-$('anruf').value = st.anruf;
-$('ende').value = st.ende;
+// Alte, nicht viertelstündige Werte angleichen
+st.anruf = textAb(st.anruf);
+st.ende = textAuf(st.ende);
+zeigeZeit('anruf', st.anruf);
+zeigeZeit('ende', st.ende);
 chipsZeigen();
 render();
 setInterval(() => { if (st.anruf && !st.ende) render(); }, 15000);
