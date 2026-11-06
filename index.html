@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WD-Rechner</title>
+<meta name="description" content="Arbeitszeitrechner für den Winterdienst: Netto-Arbeitszeit, Pausen nach ArbZG, 10-Stunden-Grenze.">
+<meta name="theme-color" content="#101317">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="WD-Rechner">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  :root {
+    --bg: #101317; --karte: #191e25; --feld: #0d1014; --kachel: #12161b; --rand: #262d36;
+    --text: #eef1f4; --leise: #9aa5b1; --akzent: #ff9f1c; --auf-akzent: #1a1205;
+    --gruen: #3ecf8e; --gelb: #ffd166; --rot: #ff6b6b; --radius: 16px;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
+  main { max-width: 480px; margin: 0 auto;
+    padding: calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 24px); }
+
+  header { display: flex; align-items: center; gap: 12px; margin: 4px 0 16px; }
+  .logo { width: 44px; height: 44px; border-radius: 12px; background: var(--akzent); display: grid; place-items: center; flex: none; }
+  h1 { font-size: 1.35rem; margin: 0; }
+  .sub { margin: 0; color: var(--leise); font-size: .9rem; }
+  h2 { font-size: 1rem; margin: 0 0 10px; }
+
+  .card { background: var(--karte); border: 1px solid var(--rand); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+  .feld + .feld { margin-top: 18px; }
+  label, .label { display: block; font-weight: 600; margin-bottom: 6px; }
+  .leise { color: var(--leise); font-weight: 400; }
+  .zeile { display: flex; gap: 8px; }
+  input[type=time] { flex: 1; min-width: 0; font: inherit; font-size: 1.6rem; font-variant-numeric: tabular-nums;
+    padding: 8px 12px; border-radius: 12px; border: 1px solid var(--rand); background: var(--feld); color: var(--text); min-height: 56px; }
+  input[type=time]:focus { outline: 2px solid var(--akzent); outline-offset: 1px; }
+
+  button { font: inherit; cursor: pointer; border: 0; border-radius: 12px; min-height: 52px; color: var(--text);
+    background: #2a323c; padding: 0 16px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  button:active { transform: scale(.97); }
+  .jetzt { background: var(--akzent); color: var(--auf-akzent); font-weight: 700; }
+  .leeren { width: 52px; padding: 0; color: var(--leise); font-size: 1.1rem; }
+  .chips { display: grid; grid-template-columns: 1.7fr repeat(4, 1fr); gap: 6px; }
+  .chips button { padding: 0 4px; }
+  .chips button[aria-checked=true] { background: var(--akzent); color: var(--auf-akzent); font-weight: 700; }
+  .hinweis { color: var(--leise); font-size: .85rem; margin: 6px 0 0; }
+
+  .leer { color: var(--leise); text-align: center; padding: 18px 0; }
+  .kopf { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .klein { color: var(--leise); font-size: .9rem; }
+  .status { font-size: .8rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+  .status.ok { background: rgba(62,207,142,.15); color: var(--gruen); }
+  .status.knapp { background: rgba(255,209,102,.15); color: var(--gelb); }
+  .status.drueber { background: rgba(255,107,107,.15); color: var(--rot); }
+  .gross { font-size: 4.2rem; font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums; letter-spacing: -1px; margin-top: 4px; }
+  .gross small { font-size: 1.6rem; font-weight: 700; color: var(--leise); letter-spacing: 0; }
+  .gross.drueber { color: var(--rot); }
+  .dezimal { color: var(--leise); }
+
+  dl { margin: 0; }
+  dd { margin: 0; }
+  .werte { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+  .werte div { background: var(--kachel); border-radius: 12px; padding: 10px; }
+  .werte dt { color: var(--leise); font-size: .8rem; }
+  .werte dd { margin-top: 2px; font-weight: 700; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+
+  .meldungen { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 8px; }
+  .meldungen:empty { display: none; }
+  .meldungen li { padding: 10px 12px; border-radius: 12px; font-size: .92rem; border-left: 4px solid; }
+  .m-rot { background: rgba(255,107,107,.12); border-color: var(--rot); }
+  .m-gelb { background: rgba(255,209,102,.10); border-color: var(--gelb); }
+  .m-info { background: var(--kachel); border-color: #3a4450; color: var(--leise); }
+
+  .plan { display: grid; gap: 6px; }
+  .plan div { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 10px 12px; border-radius: 12px; background: var(--kachel); }
+  .plan .zeit { font-weight: 800; font-size: 1.3rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .plan .max { box-shadow: inset 0 0 0 1px rgba(255,159,28,.55); }
+  .plan .max .zeit { color: var(--akzent); }
+  .plan .vorbei { opacity: .45; }
+  .tag { font-size: .8rem; font-weight: 600; color: var(--leise); }
+
+  .zettelwerte { display: grid; grid-template-columns: auto 1fr; }
+  .zettelwerte div { display: contents; }
+  .zettelwerte dt, .zettelwerte dd { padding: 10px 0; border-bottom: 1px solid var(--rand); }
+  .zettelwerte div:last-child dt, .zettelwerte div:last-child dd { border-bottom: 0; }
+  .zettelwerte dt { padding-right: 16px; color: var(--leise); }
+  .zettelwerte dd { text-align: right; font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .zettelwerte .neben dt, .zettelwerte .neben dd { font-size: .9rem; font-weight: 400; color: var(--leise); }
+
+  .tipp { display: flex; gap: 12px; align-items: flex-start; }
+  .tipp p { margin: 0; flex: 1; font-size: .9rem; }
+  .tipp button { min-height: 40px; padding: 0 12px; flex: none; }
+
+  .neu { width: 100%; background: transparent; border: 1px solid var(--rand); color: var(--leise); }
+  .neu.sicher { border-color: var(--rot); color: var(--rot); }
+  footer { color: var(--leise); font-size: .78rem; margin-top: 20px; }
+  footer p { margin: 0 0 8px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="logo" aria-hidden="true">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1a1205" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 6.5V12l3.6 2.1"/></svg>
+    </div>
+    <div>
+      <h1>WD-Rechner</h1>
+      <p class="sub">Arbeitszeit im Winterdienst</p>
+    </div>
+  </header>
+
+  <section class="card tipp" id="tipp" hidden>
+    <p id="tippText"></p>
+    <button id="tippZu" aria-label="Hinweis schließen">OK</button>
+  </section>
+
+  <section class="card">
+    <div class="feld">
+      <label for="anruf">Anruf / Beginn</label>
+      <div class="zeile">
+        <input type="time" id="anruf">
+        <button class="jetzt" data-ziel="anruf">Jetzt</button>
+      </div>
+      <p class="hinweis" id="anrufDatum">Die Zeit ab dem Anruf zählt.</p>
+    </div>
+    <div class="feld">
+      <label for="ende">Ende <span class="leise">– leer lassen, solange der Einsatz läuft</span></label>
+      <div class="zeile">
+        <input type="time" id="ende">
+        <button class="jetzt" data-ziel="ende">Jetzt</button>
+        <button class="leeren" id="endeLeeren" aria-label="Ende löschen">✕</button>
+      </div>
+    </div>
+    <div class="feld">
+      <span class="label">Pause</span>
+      <div class="chips" id="pauseChips" role="radiogroup" aria-label="Pause">
+        <button role="radio" data-p="auto">Gesetzlich</button>
+        <button role="radio" data-p="15">15</button>
+        <button role="radio" data-p="30">30</button>
+        <button role="radio" data-p="45">45</button>
+        <button role="radio" data-p="60">60</button>
+      </div>
+      <p class="hinweis">„Gesetzlich“ rechnet mit der Mindestpause. Habt ihr länger Pause gemacht, die Minuten antippen.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <p class="leer" id="leerHinweis">Anrufzeit eintragen – dann rechnet die App.</p>
+    <div id="ergebnisInhalt" hidden>
+      <div class="kopf">
+        <span class="klein" id="modus"></span>
+        <span class="status" id="status"></span>
+      </div>
+      <div class="gross" id="netto"></div>
+      <div class="dezimal" id="nettoDez"></div>
+      <dl class="werte">
+        <div><dt>Anwesend</dt><dd id="anw"></dd></div>
+        <div><dt>Pause</dt><dd id="pause"></dd></div>
+        <div><dt>Noch bis 10 h</dt><dd id="rest"></dd></div>
+      </dl>
+      <ul class="meldungen" id="meldungen"></ul>
+    </div>
+  </section>
+
+  <section class="card" id="planung" hidden>
+    <h2>Wann ist Schluss?</h2>
+    <div class="plan" id="planListe"></div>
+    <p class="hinweis" id="pauseSpaet"></p>
+  </section>
+
+  <section class="card" id="zettel" hidden>
+    <h2>Für den Stundenzettel</h2>
+    <dl class="zettelwerte">
+      <div><dt>Datum</dt><dd id="zDatum"></dd></div>
+      <div><dt>Beginn</dt><dd id="zBeginn"></dd></div>
+      <div><dt>Ende</dt><dd id="zEnde"></dd></div>
+      <div><dt>Pause</dt><dd id="zPause"></dd></div>
+      <div><dt>Arbeitszeit</dt><dd id="zStunden"></dd></div>
+      <div class="neben"><dt>auf ¼ Std. aufgerundet</dt><dd id="zViertel"></dd></div>
+    </dl>
+  </section>
+
+  <button class="neu" id="neu">Neuer Einsatz</button>
+
+  <footer>
+    <p>Privates Hilfsmittel, keine offizielle Anwendung der Stadt. Ohne Gewähr – maßgeblich sind ZMI und euer Stundenzettel.</p>
+    <p>Grundlage: § 3 ArbZG (höchstens 10 Stunden), § 4 ArbZG (mind. 30 Min. Pause bei mehr als 6 Std., 45 Min. bei mehr als 9 Std., aufteilbar in Blöcke von mind. 15 Min.).</p>
+    <p>Alle Eingaben bleiben auf diesem Handy.</p>
+  </footer>
+</main>
+
+<script>
+// LOGIK-START
+// Alle Werte in Minuten.
+const MAX_NETTO = 600; // § 3 ArbZG: höchstens 10 Stunden
+
+// Mindestpause nach § 4 ArbZG für eine Anwesenheit von `anw` Minuten.
+// Gleitend: Es wird nur so viel abgezogen, dass die Grenze (6 h bzw. 9 h) nicht überschritten wird.
+// Eine Pause zählt erst ab 15 Minuten, deshalb mindestens 15 Minuten, sobald 6 h überschritten sind.
+function pflichtPause(anw) {
+  if (anw <= 360) return 0;
+  if (anw <= 390) return Math.max(15, anw - 360);
+  if (anw <= 570) return 30;
+  if (anw <= 585) return anw - 540;
+  return 45;
+}
+
+// pauseWahl: null = gesetzliche Mindestpause, sonst gewählte Minuten
+function berechne(anw, pauseWahl) {
+  const pflicht = pflichtPause(anw);
+  const gewaehlt = pauseWahl == null ? 0 : pauseWahl;
+  const pause = Math.min(anw, Math.max(gewaehlt, pflicht));
+  return { anw, pflicht, pause, netto: anw - pause, zuWenig: pauseWahl != null && pauseWahl < pflicht };
+}
+
+// Kürzeste Anwesenheit, mit der `ziel` Minuten netto erreicht werden
+function anwesenheitFuer(ziel, pauseWahl) {
+  for (let p = ziel; p <= ziel + 240; p++) {
+    if (berechne(p, pauseWahl).netto >= ziel) return p;
+  }
+  return null;
+}
+
+function viertelAuf(min) { return Math.ceil(min / 15) * 15; }
+// LOGIK-ENDE
+
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, '0');
+const tagStr = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const uhr = d => pad(d.getHours()) + ':' + pad(d.getMinutes());
+const zuMin = s => { const [h, m] = s.split(':').map(Number); return h * 60 + m; };
+const datumAus = (tag, zeit) => {
+  const [y, mo, d] = tag.split('-').map(Number);
+  const [h, mi] = zeit.split(':').map(Number);
+  return new Date(y, mo - 1, d, h, mi, 0, 0);
+};
+const plusMin = (d, m) => new Date(d.getTime() + m * 60000);
+const hmText = m => Math.floor(m / 60) + ':' + pad(m % 60);
+const dez = m => (m / 60).toFixed(2).replace('.', ',');
+const TAGE = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+const datumText = d => TAGE[d.getDay()] + ', ' + pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.' + d.getFullYear();
+function uhrMitTag(d, bezug) {
+  const a = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const b = new Date(bezug.getFullYear(), bezug.getMonth(), bezug.getDate());
+  const diff = Math.round((a - b) / 86400000);
+  return uhr(d) + (diff > 0 ? ' <span class="tag">(+' + diff + ' Tag)</span>' : '');
+}
+
+// ---------- Speicher ----------
+const SPEICHER = 'wd-rechner-v1';
+const LEER = { anruf: '', tag: '', ende: '', pause: 'auto' };
+let st = Object.assign({}, LEER);
+try {
+  const s = JSON.parse(localStorage.getItem(SPEICHER));
+  if (s && typeof s === 'object') st = Object.assign(st, s);
+} catch (e) {}
+if (st.anruf && !st.tag) st.tag = tagStr(new Date());
+function speichern() { try { localStorage.setItem(SPEICHER, JSON.stringify(st)); } catch (e) {} }
+
+// ---------- Eingaben ----------
+function setzeAnruf(v) {
+  st.anruf = v;
+  if (v) {
+    const jetzt = new Date();
+    const d = new Date(jetzt);
+    // Liegt die Uhrzeit deutlich nach "jetzt", war der Anruf gestern (z. B. 22:00 eingetragen um 02:00)
+    if (zuMin(v) > jetzt.getHours() * 60 + jetzt.getMinutes() + 5) d.setDate(d.getDate() - 1);
+    st.tag = tagStr(d);
+  } else {
+    st.tag = '';
+  }
+  speichern(); render();
+}
+function setzeEnde(v) { st.ende = v; speichern(); render(); }
+
+['input', 'change'].forEach(ev => {
+  $('anruf').addEventListener(ev, e => setzeAnruf(e.target.value));
+  $('ende').addEventListener(ev, e => setzeEnde(e.target.value));
+});
+document.querySelectorAll('button.jetzt').forEach(b => b.addEventListener('click', () => {
+  const v = uhr(new Date());
+  $(b.dataset.ziel).value = v;
+  if (b.dataset.ziel === 'anruf') setzeAnruf(v); else setzeEnde(v);
+}));
+$('endeLeeren').addEventListener('click', () => { $('ende').value = ''; setzeEnde(''); });
+
+function chipsZeigen() {
+  document.querySelectorAll('#pauseChips button').forEach(b =>
+    b.setAttribute('aria-checked', String(b.dataset.p === String(st.pause))));
+}
+document.querySelectorAll('#pauseChips button').forEach(b => b.addEventListener('click', () => {
+  st.pause = b.dataset.p; speichern(); chipsZeigen(); render();
+}));
+
+let neuTimer = null;
+$('neu').addEventListener('click', () => {
+  const b = $('neu');
+  if (!b.classList.contains('sicher')) {
+    b.classList.add('sicher');
+    b.textContent = 'Wirklich alles löschen? Nochmal tippen';
+    neuTimer = setTimeout(() => { b.classList.remove('sicher'); b.textContent = 'Neuer Einsatz'; }, 3000);
+    return;
+  }
+  clearTimeout(neuTimer);
+  b.classList.remove('sicher'); b.textContent = 'Neuer Einsatz';
+  st = Object.assign({}, LEER);
+  $('anruf').value = ''; $('ende').value = '';
+  speichern(); chipsZeigen(); render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// ---------- Anzeige ----------
+function render() {
+  const hat = !!(st.anruf && st.tag);
+  $('leerHinweis').hidden = hat;
+  $('ergebnisInhalt').hidden = !hat;
+  $('planung').hidden = !hat;
+  $('zettel').hidden = !hat;
+  if (!hat) { $('anrufDatum').textContent = 'Die Zeit ab dem Anruf zählt.'; return; }
+
+  const start = datumAus(st.tag, st.anruf);
+  const jetzt = new Date();
+  const laeuft = !st.ende;
+  let ende;
+  if (laeuft) {
+    ende = jetzt;
+  } else {
+    ende = datumAus(st.tag, st.ende);
+    if (ende < start) ende.setDate(ende.getDate() + 1); // über Mitternacht
+  }
+  let anw = Math.floor((ende - start) / 60000);
+  const meld = [];
+  if (anw < 0) { meld.push(['gelb', 'Die Anrufzeit liegt noch in der Zukunft.']); anw = 0; }
+
+  const pauseWahl = st.pause === 'auto' ? null : Number(st.pause);
+  const r = berechne(anw, pauseWahl);
+  const rest = MAX_NETTO - r.netto;
+
+  $('anrufDatum').textContent = 'Einsatz vom ' + datumText(start);
+  $('modus').textContent = laeuft ? 'Bisher netto · Einsatz läuft' : 'Netto-Arbeitszeit';
+  $('netto').innerHTML = hmText(r.netto) + ' <small>Std.</small>';
+  $('netto').classList.toggle('drueber', rest < 0);
+  $('nettoDez').textContent = '= ' + dez(r.netto) + ' Stunden';
+  $('anw').textContent = hmText(anw);
+  $('pause').textContent = r.pause + ' Min.';
+  $('rest').textContent = rest >= 0 ? hmText(rest) : 'drüber';
+
+  const status = $('status');
+  if (rest < 0) { status.className = 'status drueber'; status.textContent = 'über 10 Std.'; }
+  else if (rest <= 60) { status.className = 'status knapp'; status.textContent = 'knapp'; }
+  else { status.className = 'status ok'; status.textContent = 'im Rahmen'; }
+
+  if (rest < 0) meld.push(['rot', 'Über 10 Stunden netto – die Höchstgrenze nach § 3 ArbZG ist um ' + hmText(-rest) + ' Std. überschritten.']);
+  else if (laeuft && rest <= 60) meld.push(['gelb', 'Nur noch ' + hmText(rest) + ' Std. bis zur 10-Stunden-Grenze.']);
+  if (r.zuWenig) meld.push(['gelb', 'Bei ' + hmText(anw) + ' Std. Anwesenheit sind mindestens ' + r.pflicht + ' Min. Pause Pflicht – gerechnet wird mit ' + r.pflicht + ' Min.']);
+  if (laeuft && anw > 960) meld.push(['gelb', 'Der Einsatz läuft seit über 16 Stunden. Alter Einsatz? Unten „Neuer Einsatz“ tippen.']);
+  if (r.netto > 480 && rest >= 0) meld.push(['info', 'Mehr als 8 Std. sind nur erlaubt, wenn es im Ausgleichszeitraum wieder ausgeglichen wird (§ 3 ArbZG).']);
+  $('meldungen').innerHTML = meld.map(([k, t]) => '<li class="m-' + k + '">' + t + '</li>').join('');
+
+  // Wann ist Schluss?
+  const bis = laeuft ? jetzt : ende;
+  const ziele = [
+    [360, pauseWahl == null ? '6 Std. netto – ohne Pause' : '6 Std. netto'],
+    [480, '8 Std. netto'],
+    [540, '9 Std. netto'],
+    [600, '10 Std. netto – Höchstgrenze']
+  ];
+  $('planListe').innerHTML = ziele.map(([z, text]) => {
+    const t = plusMin(start, anwesenheitFuer(z, pauseWahl));
+    const kl = [z === MAX_NETTO ? 'max' : '', t <= bis ? 'vorbei' : ''].join(' ').trim();
+    return '<div class="' + kl + '"><span>' + text + '</span><span class="zeit">' + uhrMitTag(t, start) + '</span></div>';
+  }).join('');
+  $('pauseSpaet').innerHTML = anw < 360
+    ? 'Ohne Pause höchstens bis <b>' + uhrMitTag(plusMin(start, 360), start) + '</b> arbeiten (6 Std. am Stück, § 4 ArbZG).'
+    : 'Die Pause muss wirklich gemacht werden – nicht erst am Ende – und zählt nur in Blöcken ab 15 Minuten.';
+
+  // Stundenzettel
+  $('zDatum').textContent = datumText(start);
+  $('zBeginn').textContent = st.anruf + ' Uhr';
+  $('zEnde').innerHTML = laeuft
+    ? 'läuft <span class="tag">(jetzt ' + uhr(jetzt) + ')</span>'
+    : uhrMitTag(ende, start) + ' Uhr';
+  $('zPause').textContent = r.pause + ' Min.';
+  $('zStunden').textContent = hmText(r.netto) + ' Std. = ' + dez(r.netto);
+  const v = viertelAuf(r.netto);
+  $('zViertel').textContent = hmText(v) + ' Std. = ' + dez(v);
+}
+
+// ---------- Hinweis "Zum Home-Bildschirm" ----------
+(function () {
+  const istApp = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  let gesehen = false;
+  try { gesehen = localStorage.getItem('wd-rechner-tipp') === '1'; } catch (e) {}
+  if (istApp || gesehen) return;
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  $('tippText').textContent = ios
+    ? 'Tipp: Unten auf „Teilen“ tippen und „Zum Home-Bildschirm“ wählen – dann ist der Rechner wie eine App auf dem Handy.'
+    : 'Tipp: Im Browser-Menü „App installieren“ bzw. „Zum Startbildschirm hinzufügen“ wählen – dann ist der Rechner wie eine App auf dem Handy.';
+  $('tipp').hidden = false;
+  $('tippZu').addEventListener('click', () => {
+    $('tipp').hidden = true;
+    try { localStorage.setItem('wd-rechner-tipp', '1'); } catch (e) {}
+  });
+})();
+
+// ---------- Start ----------
+$('anruf').value = st.anruf;
+$('ende').value = st.ende;
+chipsZeigen();
+render();
+setInterval(() => { if (st.anruf && !st.ende) render(); }, 15000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
