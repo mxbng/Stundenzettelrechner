@@ -22,7 +22,7 @@ Kleiner Arbeitszeitrechner für den Winterdienst als Web-App. Er läuft im Brows
 
 ## Änderungen veröffentlichen
 
-Nach jeder Änderung in `sw.js` die Zeile `const CACHE = 'wd-rechner-v1';` hochzählen (v2, v3 …).
+Nach jeder Änderung in `sw.js` die Zeile `const CACHE = 'wd-rechner-v4';` hochzählen (v5, v6 …).
 Sonst sehen Handys, auf denen die App schon installiert ist, die neue Version nicht.
 
 ## Dateien

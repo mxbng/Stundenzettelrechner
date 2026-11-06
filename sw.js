@@ -1,6 +1,6 @@
 // Offline-Speicher für den WD-Rechner.
-// Bei jeder Änderung an den Dateien die Versionsnummer hochzählen (v1 -> v2 ...).
-const CACHE = 'wd-rechner-v3';
+// Bei jeder Änderung an den Dateien die Versionsnummer hochzählen (v4 -> v5 ...).
+const CACHE = 'wd-rechner-v4';
 const DATEIEN = [
   './',
   './index.html',
@@ -22,16 +22,33 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// Erst aus dem Speicher liefern (funktioniert offline), im Hintergrund aktualisieren.
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  e.respondWith(
-    caches.open(CACHE).then(async c => {
-      const treffer = await c.match(e.request, { ignoreSearch: true });
-      const netz = fetch(e.request)
-        .then(antwort => { if (antwort.ok) c.put(e.request, antwort.clone()); return antwort; })
-        .catch(() => treffer);
-      return treffer || netz;
-    })
-  );
+  e.respondWith(e.request.mode === 'navigate' ? netzZuerst(e.request) : speicherZuerst(e.request));
 });
+
+// Die Seite selbst: mit Netz immer die neueste Version holen,
+// ohne Netz (oder nach 4 Sekunden ohne Antwort) die gespeicherte nehmen.
+async function netzZuerst(anfrage) {
+  const c = await caches.open(CACHE);
+  try {
+    const antwort = await Promise.race([
+      fetch(anfrage),
+      new Promise((_, nein) => setTimeout(() => nein(new Error('Zeitüberschreitung')), 4000))
+    ]);
+    if (antwort.ok) c.put(anfrage, antwort.clone());
+    return antwort;
+  } catch (fehler) {
+    return (await c.match(anfrage, { ignoreSearch: true })) || (await c.match('./index.html')) || Response.error();
+  }
+}
+
+// Symbole und Manifest: aus dem Speicher, im Hintergrund aktualisieren.
+async function speicherZuerst(anfrage) {
+  const c = await caches.open(CACHE);
+  const treffer = await c.match(anfrage, { ignoreSearch: true });
+  const netz = fetch(anfrage)
+    .then(antwort => { if (antwort.ok) c.put(anfrage, antwort.clone()); return antwort; })
+    .catch(() => treffer);
+  return treffer || netz;
+}
