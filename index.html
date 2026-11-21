@@ -63,6 +63,7 @@
   button:active, .knopf:active { transform: scale(.97); }
   button:disabled { cursor: default; transform: none; opacity: 1; }
   .jetzt { background: var(--akzent); color: var(--auf-akzent); font-weight: 700; }
+  .jetzt:disabled { background: #2a323c; color: var(--leise); font-weight: 400; }
   .leeren { width: 52px; padding: 0; color: var(--leise); font-size: 1.1rem; }
   .chips { display: grid; grid-template-columns: 1.7fr repeat(4, 1fr); gap: 6px; }
   .chips button { padding: 0 4px; }
@@ -155,6 +156,39 @@
   .tipp p { margin: 0; flex: 1; font-size: .9rem; }
   .tipp button { min-height: 40px; padding: 0 12px; flex: none; }
 
+  /* Reiter Rechner / Verlauf */
+  .reiter { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px; }
+  .reiter button[aria-selected=true] { background: var(--akzent); color: var(--auf-akzent); font-weight: 700; }
+  .zahl { margin-left: 8px; font-size: .8rem; font-weight: 700; background: rgba(255,255,255,.16); border-radius: 999px; padding: 1px 8px; }
+  .zahl:empty { display: none; }
+  .gruppe { display: flex; justify-content: space-between; gap: 8px; padding: 10px 4px 2px; color: var(--leise); font-size: .85rem; font-weight: 600; }
+
+  /* Berichtsvorschau */
+  body.gesperrt { overflow: hidden; }
+  .vorschau { position: fixed; inset: 0; z-index: 20; display: flex; flex-direction: column; background: #2b302d; }
+  .vleiste { display: flex; align-items: center; gap: 8px; padding: calc(env(safe-area-inset-top) + 8px) 12px 8px;
+    background: var(--karte); border-bottom: 1px solid var(--rand); }
+  .vleiste .vtitel { flex: 1; text-align: center; font-weight: 700; font-size: .95rem; }
+  .vleiste button { min-height: 44px; padding: 0 12px; white-space: nowrap; }
+  .vflaeche { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; padding: 12px 12px calc(env(safe-area-inset-bottom) + 24px); }
+  .vhinweis { color: #c9d3cd; font-size: .8rem; text-align: center; margin: 0 0 10px; }
+  .blatthalter { position: relative; margin: 0 auto; }
+  .blatt { position: absolute; top: 0; left: 0; width: 794px; min-height: 1123px; transform-origin: 0 0;
+    display: flex; flex-direction: column; padding: 57px; background: #fff; color: #000;
+    box-shadow: 0 4px 24px rgba(0,0,0,.45); font: 12.7px/1.25 Helvetica, Arial, sans-serif; }
+  .blatt h1 { font-size: 20px; margin: 0 0 9px; color: #000; }
+  .blatt .bz { font-size: 14.7px; margin: 0 0 16px; }
+  .blatt table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .blatt th { background: #e1f1e7; text-align: left; font-weight: 700; padding: 6px 5px; }
+  .blatt td { padding: 6px 5px; border-bottom: .75px solid #cdd6d0; vertical-align: top; }
+  .blatt .r { text-align: right; }
+  .blatt .rot { color: #c81e1e; }
+  .blatt .n { padding-left: 22px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .blatt tfoot td { border-top: 2px solid #009a44; border-bottom: 0; font-weight: 700; font-size: 14px; padding-top: 8px; }
+  .blatt .hw { color: #5a5a5a; font-size: 11.3px; margin-top: 16px; }
+  .blatt .hw p, .blatt .fuss p { margin: 0 0 4px; }
+  .blatt .fuss { margin-top: auto; padding-top: 30px; color: #787878; font-size: 10.7px; }
+
   footer { color: var(--leise); font-size: .78rem; margin-top: 20px; }
   footer p { margin: 0 0 8px; }
   [hidden] { display: none !important; }
@@ -177,6 +211,12 @@
     <button id="tippZu" aria-label="Hinweis schließen">OK</button>
   </section>
 
+  <nav class="reiter" role="tablist" aria-label="Bereich">
+    <button role="tab" data-reiter="rechner" aria-selected="true">Rechner</button>
+    <button role="tab" data-reiter="verlauf" aria-selected="false">Verlauf<span class="zahl" id="verlaufZahl"></span></button>
+  </nav>
+
+  <div id="seiteRechner">
   <!-- Eingabe -->
   <section class="card">
     <p class="bearbeiten" id="bearbeitenHinweis" hidden></p>
@@ -272,10 +312,12 @@
     </div>
     <button class="neu" id="neu">Neuer Einsatz</button>
   </div>
+  </div><!-- /seiteRechner -->
 
   <!-- Verlauf -->
+  <div id="seiteVerlauf" hidden>
   <section class="card" id="verlauf">
-    <h2>Verlauf</h2>
+    <h2>Meine Einsätze</h2>
     <div class="umschalter" id="ansichtChips" role="radiogroup" aria-label="Zeitraum">
       <button role="radio" data-ansicht="woche">Woche</button>
       <button role="radio" data-ansicht="monat">Monat</button>
@@ -287,10 +329,11 @@
     </div>
     <div class="summe" id="summe"></div>
     <div class="liste" id="liste"></div>
-    <button class="breit" id="pdf">Bericht als PDF</button>
+    <button class="breit jetzt" id="pdf">Bericht ansehen &amp; als PDF</button>
     <p class="rueckmeldung" id="verlaufMeldung" aria-live="polite"></p>
+  </section>
 
-    <hr class="trenner">
+  <section class="card">
     <h3>Sicherung</h3>
     <p class="hinweis" id="sicherStatus"></p>
     <div class="zwei" style="margin-top:10px">
@@ -301,6 +344,7 @@
     <p class="hinweis">Die Sicherung ist eine kleine Datei mit allen Einträgen. Über „Teilen“ z. B. in iCloud Drive, „Dateien“ oder per Mail ablegen. Beim Laden werden fehlende Einträge ergänzt – nichts wird überschrieben.</p>
     <p class="hinweis" id="iosHinweis" hidden>iPhone: Die App vom Home-Bildschirm hat einen eigenen Speicher. Den Rechner deshalb immer über das grüne Symbol öffnen, nicht über Safari.</p>
   </section>
+  </div><!-- /seiteVerlauf -->
 
   <footer>
     <p>Privates Hilfsmittel, keine offizielle Anwendung der Stadt. Ohne Gewähr – maßgeblich sind ZMI und euer Stundenzettel.</p>
@@ -309,6 +353,20 @@
     <p>Alle Eingaben und der Verlauf bleiben auf diesem Handy. Es wird nichts übertragen.</p>
   </footer>
 </main>
+
+<!-- Vorschau des Berichts -->
+<div class="vorschau" id="vorschau" hidden role="dialog" aria-modal="true" aria-label="Vorschau des Berichts">
+  <div class="vleiste">
+    <button id="vorschauZu">Schließen</button>
+    <button id="vorschauZoom">Größer</button>
+    <span class="vtitel"></span>
+    <button class="jetzt" id="vorschauPdf">PDF teilen</button>
+  </div>
+  <div class="vflaeche" id="vflaeche">
+    <p class="vhinweis">So sieht das PDF aus. Mit „Größer“ oder zwei Fingern vergrößern.</p>
+    <div class="blatthalter" id="blatthalter"><div class="blatt" id="blatt"></div></div>
+  </div>
+</div>
 
 <script>
 // LOGIK-START
@@ -574,8 +632,19 @@ function ladeEintrag(e) {
     pause: PAUSEN.includes(String(e.pause)) ? String(e.pause) : 'auto',
     notiz: e.notiz || '', tagManuell: true, bearbeiteId: e.id, geaendert: false });
   speichern(); formularFuellen(); renderEinsatz();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  zeigeReiter('rechner');
 }
+
+// ---------- Reiter Rechner / Verlauf ----------
+function zeigeReiter(name) {
+  $('seiteRechner').hidden = name !== 'rechner';
+  $('seiteVerlauf').hidden = name !== 'verlauf';
+  document.querySelectorAll('.reiter button').forEach(b =>
+    b.setAttribute('aria-selected', String(b.dataset.reiter === name)));
+  if (name === 'verlauf') { renderVerlauf(); ladeJsPdf().catch(() => {}); }
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll('.reiter button').forEach(b => b.addEventListener('click', () => zeigeReiter(b.dataset.reiter)));
 
 // ---------- Anzeige: aktueller Einsatz ----------
 function renderEinsatz() {
@@ -718,12 +787,26 @@ function renderVerlauf() {
   const liste = eintraegeIn(z);
   $('zeitraumText').textContent = z.titel;
 
+  // Im Monat nach Kalenderwochen gruppieren, mit Wochensumme
+  const kwSchluessel = e => { const k = kalenderwoche(datumAus(e.tag, '12:00')); return k.jahr + '-' + k.kw; };
+  const wochenSumme = {};
+  if (ansicht === 'monat') liste.forEach(e => { const s = kwSchluessel(e); wochenSumme[s] = (wochenSumme[s] || 0) + auswerten(e).netto; });
+  let letzteKw = '';
+
   let summe = 0;
   const html = liste.map(e => {
     const a = auswerten(e);
     summe += a.netto;
     const offen = e.id === offenId;
-    return '<div class="eintrag" data-id="' + esc(e.id) + '">' +
+    let kopf = '';
+    if (ansicht === 'monat') {
+      const s = kwSchluessel(e);
+      if (s !== letzteKw) {
+        letzteKw = s;
+        kopf = '<div class="gruppe"><span>KW ' + s.split('-')[1] + '</span><span>' + hmText(wochenSumme[s]) + ' Std.</span></div>';
+      }
+    }
+    return kopf + '<div class="eintrag" data-id="' + esc(e.id) + '">' +
       '<button class="auf" data-aktion="auf" aria-expanded="' + offen + '">' +
         '<span class="links">' +
           '<span class="tagz">' + kurzDatum(a.start) + '</span>' +
@@ -743,7 +826,7 @@ function renderVerlauf() {
   $('summe').innerHTML = '<span>' + liste.length + (liste.length === 1 ? ' Einsatz' : ' Einsätze') + '</span>' +
     '<b>' + hmText(summe) + ' Std. = ' + dez(summe) + '</b>';
   $('pdf').disabled = !liste.length;
-  $('pdf').textContent = 'Bericht als PDF';
+  $('verlaufZahl').textContent = verlauf.length ? String(verlauf.length) : '';
 }
 
 document.querySelectorAll('#ansichtChips button').forEach(b => b.addEventListener('click', () => {
@@ -799,7 +882,42 @@ function ladeJsPdf() {
   return jsPdfLaden;
 }
 
-function baueBericht(z, liste) {
+// Inhalt des Berichts – einmal berechnet, für Vorschau und PDF gleich
+function berichtDaten(z, liste) {
+  let summe = 0, ueber10 = 0;
+  const zeilen = liste.map(e => {
+    const a = auswerten(e);
+    summe += a.netto;
+    if (a.netto > MAX_NETTO) ueber10++;
+    return {
+      datum: kurzDatum(a.start) + String(a.start.getFullYear()).slice(2),
+      beginn: e.anruf,
+      ende: e.ende + (a.ueberNacht ? ' (+1)' : ''),
+      pause: a.pause + ' Min.',
+      std: hmText(a.netto),
+      dez: dez(a.netto),
+      notiz: (e.notiz || '').replace(/\r/g, ''),
+      rot: a.netto > MAX_NETTO
+    };
+  });
+  return {
+    titel: 'Winterdienst - persönliche Arbeitszeitaufstellung',
+    zeitraum: z.pdfTitel,
+    zeilen,
+    summeText: 'Summe (' + liste.length + (liste.length === 1 ? ' Einsatz)' : ' Einsätze)'),
+    summeStd: hmText(summe),
+    summeDez: dez(summe),
+    hinweise: [
+      'Arbeitszeit = Anwesenheit ab Anruf abzüglich Pause (mindestens die gesetzliche Pause nach § 4 ArbZG). Uhrzeiten in Viertelstunden.',
+      '(+1) = Ende am Folgetag.' + (ueber10 ? ' Rot = mehr als 10 Stunden netto (§ 3 ArbZG).' : '')
+    ],
+    erstellt: 'Erstellt am ' + zeitpunktText(new Date()) + ' mit dem WD-Rechner (privates Hilfsmittel).',
+    massgeblich: 'Maßgeblich sind ZMI und der Stundenzettel.',
+    datei: z.datei
+  };
+}
+
+function baueBericht(b) {
   const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
   const L = 15, R = 195, UNTEN = 272;
   const FS = 9.5, ZH = FS * 1.25 * 0.3528; // Schriftgröße, Zeilenhöhe in mm
@@ -809,10 +927,10 @@ function baueBericht(z, liste) {
   let y = 20;
 
   doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
-  doc.text('Winterdienst - persönliche Arbeitszeitaufstellung', L, y);
+  doc.text(b.titel, L, y);
   y += 7;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(11);
-  doc.text(z.pdfTitel, L, y);
+  doc.text(b.zeitraum, L, y);
   y += 9;
 
   function kopfzeile() {
@@ -827,23 +945,19 @@ function baueBericht(z, liste) {
   }
   kopfzeile();
 
-  let summe = 0, ueber10 = 0;
   doc.setDrawColor(205, 214, 208); doc.setLineWidth(0.2);
-  liste.forEach(e => {
-    const a = auswerten(e);
-    summe += a.netto;
-    if (a.netto > MAX_NETTO) ueber10++;
+  b.zeilen.forEach(r => {
     doc.setFontSize(FS);
-    const zeilen = e.notiz ? doc.splitTextToSize(e.notiz.replace(/\r/g, ''), notizBreite) : [];
+    const zeilen = r.notiz ? doc.splitTextToSize(r.notiz, notizBreite) : [];
     const hoehe = Math.max(1, zeilen.length) * ZH;
-    if (y + hoehe > UNTEN) { doc.addPage(); y = 20; kopfzeile(); }
-    doc.text(kurzDatum(a.start) + String(a.start.getFullYear()).slice(2), sp.datum, y);
-    doc.text(e.anruf, sp.beginn, y);
-    doc.text(e.ende + (a.ueberNacht ? ' (+1)' : ''), sp.ende, y);
-    doc.text(a.pause + ' Min.', sp.pause, y);
-    if (a.netto > MAX_NETTO) doc.setTextColor(200, 30, 30);
-    doc.text(hmText(a.netto), sp.std, y, { align: 'right' });
-    doc.text(dez(a.netto), sp.dez, y, { align: 'right' });
+    if (y + hoehe > UNTEN) { doc.addPage(); y = 20; kopfzeile(); doc.setDrawColor(205, 214, 208); doc.setLineWidth(0.2); }
+    doc.text(r.datum, sp.datum, y);
+    doc.text(r.beginn, sp.beginn, y);
+    doc.text(r.ende, sp.ende, y);
+    doc.text(r.pause, sp.pause, y);
+    if (r.rot) doc.setTextColor(200, 30, 30);
+    doc.text(r.std, sp.std, y, { align: 'right' });
+    doc.text(r.dez, sp.dez, y, { align: 'right' });
     doc.setTextColor(0);
     if (zeilen.length) doc.text(zeilen, sp.notiz, y);
     const unten = y + hoehe - ZH + 2.3;
@@ -855,53 +969,108 @@ function baueBericht(z, liste) {
   doc.setLineWidth(0.5); doc.setDrawColor(0, 154, 68);
   doc.line(L, y - 3.2, R, y - 3.2);
   doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5);
-  doc.text('Summe (' + liste.length + (liste.length === 1 ? ' Einsatz)' : ' Einsätze)'), sp.datum, y + 1.5);
-  doc.text(hmText(summe), sp.std, y + 1.5, { align: 'right' });
-  doc.text(dez(summe), sp.dez, y + 1.5, { align: 'right' });
+  doc.text(b.summeText, sp.datum, y + 1.5);
+  doc.text(b.summeStd, sp.std, y + 1.5, { align: 'right' });
+  doc.text(b.summeDez, sp.dez, y + 1.5, { align: 'right' });
   doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(90);
   y += 10;
-  const hinweise = [
-    'Arbeitszeit = Anwesenheit ab Anruf abzüglich Pause (mindestens die gesetzliche Pause nach § 4 ArbZG). Uhrzeiten in Viertelstunden.',
-    '(+1) = Ende am Folgetag.' + (ueber10 ? ' Rot = mehr als 10 Stunden netto (§ 3 ArbZG).' : '')
-  ];
-  hinweise.forEach(t => { const z2 = doc.splitTextToSize(t, R - L); if (y > UNTEN) { doc.addPage(); y = 20; } doc.text(z2, L, y); y += z2.length * 3.8 + 1; });
+  b.hinweise.forEach(t => {
+    const z2 = doc.splitTextToSize(t, R - L);
+    if (y > UNTEN) { doc.addPage(); y = 20; }
+    doc.text(z2, L, y);
+    y += z2.length * 3.8 + 1;
+  });
 
   const seiten = doc.getNumberOfPages();
-  const erstellt = 'Erstellt am ' + zeitpunktText(new Date()) + ' mit dem WD-Rechner (privates Hilfsmittel).';
   for (let i = 1; i <= seiten; i++) {
     doc.setPage(i);
     doc.setFontSize(8); doc.setTextColor(120);
-    doc.text(erstellt, L, 287);
-    doc.text('Maßgeblich sind ZMI und der Stundenzettel.', L, 291);
+    doc.text(b.erstellt, L, 287);
+    doc.text(b.massgeblich, L, 291);
     doc.text('Seite ' + i + ' von ' + seiten, R, 287, { align: 'right' });
   }
   return doc.output('blob');
 }
 
-$('pdf').addEventListener('click', async () => {
+// ---------- Vorschau ----------
+let bericht = null;      // Inhalt, der gerade in der Vorschau steht
+let vorschauGross = false;
+
+function zeigeVorschau() {
   const z = zeitraum();
   const liste = eintraegeIn(z);
   if (!liste.length) return;
-  const btn = $('pdf');
+  bericht = berichtDaten(z, liste);
+  const b = bericht;
+  $('blatt').innerHTML =
+    '<h1>' + esc(b.titel) + '</h1><p class="bz">' + esc(b.zeitraum) + '</p>' +
+    '<table><colgroup><col style="width:98px"><col style="width:60px"><col style="width:76px"><col style="width:62px">' +
+      '<col style="width:46px"><col style="width:62px"><col></colgroup>' +
+    '<thead><tr><th>Datum</th><th>Beginn</th><th>Ende</th><th>Pause</th><th class="r">Std.</th><th class="r">Dezimal</th><th class="n">Notiz</th></tr></thead>' +
+    '<tbody>' + b.zeilen.map(r =>
+      '<tr><td>' + esc(r.datum) + '</td><td>' + esc(r.beginn) + '</td><td>' + esc(r.ende) + '</td><td>' + esc(r.pause) + '</td>' +
+      '<td class="r' + (r.rot ? ' rot' : '') + '">' + esc(r.std) + '</td><td class="r' + (r.rot ? ' rot' : '') + '">' + esc(r.dez) + '</td>' +
+      '<td class="n">' + esc(r.notiz) + '</td></tr>').join('') + '</tbody>' +
+    '<tfoot><tr><td colspan="4">' + esc(b.summeText) + '</td><td class="r">' + esc(b.summeStd) + '</td><td class="r">' +
+      esc(b.summeDez) + '</td><td></td></tr></tfoot></table>' +
+    '<div class="hw">' + b.hinweise.map(h => '<p>' + esc(h) + '</p>').join('') + '</div>' +
+    '<div class="fuss"><p>' + esc(b.erstellt) + '</p><p>' + esc(b.massgeblich) + '</p></div>';
+  vorschauGross = false;
+  $('vorschauZoom').textContent = 'Größer';
+  $('vorschauPdf').textContent = 'PDF teilen';
+  $('vorschau').hidden = false;
+  document.body.classList.add('gesperrt');
+  $('vflaeche').scrollTo(0, 0);
+  skaliereBlatt();
+  ladeJsPdf().catch(() => {});
+  try { history.pushState({ vorschau: true }, ''); } catch (e) {}
+}
+
+function skaliereBlatt() {
+  const blatt = $('blatt');
+  const verfuegbar = $('vflaeche').clientWidth - 24;
+  const s = vorschauGross ? 1 : Math.min(1, verfuegbar / 794);
+  blatt.style.transform = 'scale(' + s + ')';
+  $('blatthalter').style.width = Math.round(794 * s) + 'px';
+  $('blatthalter').style.height = Math.round(blatt.offsetHeight * s) + 'px';
+}
+
+function schliesseVorschau() {
+  $('vorschau').hidden = true;
+  document.body.classList.remove('gesperrt');
+}
+
+$('pdf').addEventListener('click', zeigeVorschau);
+$('vorschauZu').addEventListener('click', () => {
+  // Über "Zurück" schließen, damit der Verlauf des Browsers stimmt
+  if (history.state && history.state.vorschau) history.back(); else schliesseVorschau();
+});
+window.addEventListener('popstate', () => { if (!$('vorschau').hidden) schliesseVorschau(); });
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !$('vorschau').hidden) $('vorschauZu').click(); });
+window.addEventListener('resize', () => { if (!$('vorschau').hidden) skaliereBlatt(); });
+$('vorschauZoom').addEventListener('click', () => {
+  vorschauGross = !vorschauGross;
+  $('vorschauZoom').textContent = vorschauGross ? 'Ganze Seite' : 'Größer';
+  skaliereBlatt();
+});
+
+$('vorschauPdf').addEventListener('click', async () => {
+  if (!bericht) return;
+  const btn = $('vorschauPdf');
   if (!window.jspdf) {
     // Baustein nachladen; danach erneut tippen (iPhone verlangt das Teilen direkt nach dem Tippen)
-    btn.disabled = true; btn.textContent = 'PDF wird vorbereitet …';
-    try {
-      await ladeJsPdf();
-      btn.textContent = 'PDF bereit – nochmal tippen';
-    } catch (e) {
-      btn.textContent = 'Bericht als PDF';
-      meldung($('verlaufMeldung'), 'PDF-Baustein nicht verfügbar – die App einmal mit Internet öffnen.', true);
-    }
+    btn.disabled = true; btn.textContent = 'Lädt …';
+    try { await ladeJsPdf(); btn.textContent = 'Jetzt teilen'; }
+    catch (e) { btn.textContent = 'PDF teilen'; meldung($('verlaufMeldung'), 'PDF-Baustein nicht verfügbar – die App einmal mit Internet öffnen.', true); }
     btn.disabled = false;
     return;
   }
   let blob;
-  try { blob = baueBericht(z, liste); }
+  try { blob = baueBericht(bericht); }
   catch (e) { meldung($('verlaufMeldung'), 'PDF konnte nicht erstellt werden.', true); return; }
-  const r = await teileDatei(blob, z.datei, 'application/pdf');
-  btn.textContent = 'Bericht als PDF';
-  if (r !== 'abgebrochen') meldung($('verlaufMeldung'), '✓ ' + z.datei + (r === 'geladen' ? ' heruntergeladen' : ' erstellt'));
+  const r = await teileDatei(blob, bericht.datei, 'application/pdf');
+  btn.textContent = 'PDF teilen';
+  if (r !== 'abgebrochen') meldung($('verlaufMeldung'), '✓ ' + bericht.datei + (r === 'geladen' ? ' heruntergeladen' : ' erstellt'));
 });
 
 // ---------- Sicherung ----------

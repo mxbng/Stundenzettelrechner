@@ -11,8 +11,9 @@ Kleiner Arbeitszeitrechner für den Winterdienst als Web-App. Er läuft im Brows
 - Netto-Arbeitszeit in Std:Min und dezimal, Restzeit bis 10 Std. netto (§ 3 ArbZG)
 - Uhrzeiten, zu denen 6 / 8 / 9 / 10 Std. netto erreicht sind
 - Werte für den Stundenzettel, mit Datum und Notiz
-- Verlauf: Einsätze speichern, bearbeiten, löschen; Übersicht je Woche oder Monat mit Summe
-- Bericht als PDF (Woche oder Monat), wird auf dem Handy erzeugt und über „Teilen“ gespeichert oder verschickt
+- Zwei Bereiche: „Rechner“ und „Verlauf“
+- Verlauf: Einsätze speichern, bearbeiten, löschen; Übersicht je Woche oder Monat mit Summe, im Monat nach Kalenderwochen gruppiert
+- Bericht (Woche oder Monat) mit Vorschau in der App; das PDF wird auf dem Handy erzeugt und über „Teilen“ gespeichert oder verschickt
 - Sicherung als JSON-Datei (speichern und wieder laden); die App zeigt an, wenn Änderungen noch nicht gesichert sind
 
 Alle Daten bleiben im Browser des jeweiligen Handys (localStorage). Es gibt keinen Server und keine Übertragung.
