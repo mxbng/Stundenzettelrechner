@@ -341,7 +341,7 @@
       <label class="knopf" for="ladenDatei">Sicherung laden</label>
     </div>
     <input type="file" id="ladenDatei" hidden>
-    <p class="hinweis">Die Sicherung ist eine kleine Datei mit allen Einträgen. Über „Teilen“ z. B. in iCloud Drive, „Dateien“ oder per Mail ablegen. Beim Laden werden fehlende Einträge ergänzt – nichts wird überschrieben.</p>
+    <p class="hinweis">Die Sicherung ist <b>eine</b> Datei „WD-Sicherung.json“ mit allen Einträgen. Immer am selben Ort speichern (z. B. iCloud Drive oder „Dateien“) und die alte Datei ersetzen – sie enthält ohnehin alles. Beim Laden werden fehlende Einträge ergänzt, nichts wird überschrieben.</p>
     <p class="hinweis" id="iosHinweis" hidden>iPhone: Die App vom Home-Bildschirm hat einen eigenen Speicher. Den Rechner deshalb immer über das grüne Symbol öffnen, nicht über Safari.</p>
   </section>
   </div><!-- /seiteVerlauf -->
@@ -1089,7 +1089,7 @@ function renderSicherung() {
 
 async function sichern(btn) {
   const daten = { app: 'wd-rechner', format: 1, erstellt: new Date().toISOString(), eintraege: verlauf };
-  const name = 'WD-Sicherung_' + tagStr(new Date()) + '.json';
+  const name = 'WD-Sicherung.json'; // immer gleicher Name: am selben Ort speichern und die alte Datei ersetzen
   const blob = new Blob([JSON.stringify(daten, null, 1)], { type: 'application/json' });
   const r = await teileDatei(blob, name, 'application/json');
   if (r === 'abgebrochen') return;
