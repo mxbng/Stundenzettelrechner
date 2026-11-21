@@ -1,13 +1,14 @@
 // Offline-Speicher für den WD-Rechner.
-// Bei jeder Änderung an den Dateien die Versionsnummer hochzählen (v4 -> v5 ...).
-const CACHE = 'wd-rechner-v4';
+// Bei jeder Änderung an den Dateien die Versionsnummer hochzählen (v5 -> v6 ...).
+const CACHE = 'wd-rechner-v5';
 const DATEIEN = [
   './',
   './index.html',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
-  './apple-touch-icon.png'
+  './apple-touch-icon.png',
+  './jspdf.umd.min.js'
 ];
 
 self.addEventListener('install', e => {
@@ -43,7 +44,7 @@ async function netzZuerst(anfrage) {
   }
 }
 
-// Symbole und Manifest: aus dem Speicher, im Hintergrund aktualisieren.
+// Symbole, Manifest und PDF-Baustein: aus dem Speicher, im Hintergrund aktualisieren.
 async function speicherZuerst(anfrage) {
   const c = await caches.open(CACHE);
   const treffer = await c.match(anfrage, { ignoreSearch: true });

@@ -10,7 +10,12 @@ Kleiner Arbeitszeitrechner für den Winterdienst als Web-App. Er läuft im Brows
   Abgezogen wird gleitend, nur so viel, dass die Grenze nicht überschritten wird (z. B. 6:20 anwesend → 20 Min. Pause → 6:00 netto).
 - Netto-Arbeitszeit in Std:Min und dezimal, Restzeit bis 10 Std. netto (§ 3 ArbZG)
 - Uhrzeiten, zu denen 6 / 8 / 9 / 10 Std. netto erreicht sind
-- Werte für den Stundenzettel
+- Werte für den Stundenzettel, mit Datum und Notiz
+- Verlauf: Einsätze speichern, bearbeiten, löschen; Übersicht je Woche oder Monat mit Summe
+- Bericht als PDF (Woche oder Monat), wird auf dem Handy erzeugt und über „Teilen“ gespeichert oder verschickt
+- Sicherung als JSON-Datei (speichern und wieder laden); die App zeigt an, wenn Änderungen noch nicht gesichert sind
+
+Alle Daten bleiben im Browser des jeweiligen Handys (localStorage). Es gibt keinen Server und keine Übertragung.
 
 ## Auf GitHub Pages stellen
 
@@ -32,6 +37,7 @@ Sonst sehen Handys, auf denen die App schon installiert ist, die neue Version ni
 | `index.html` | die komplette App (Oberfläche und Rechenlogik) |
 | `manifest.webmanifest` | Name und Symbol für „Zum Home-Bildschirm“ |
 | `sw.js` | Offline-Speicher |
+| `jspdf.umd.min.js` | jsPDF 4.2.1 zum Erzeugen der PDF-Berichte (MIT-Lizenz, siehe `jspdf-LIZENZ.txt`) |
 | `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` | App-Symbole |
 
 Privates Hilfsmittel, keine offizielle Anwendung der Stadt. Maßgeblich sind ZMI und der Stundenzettel.

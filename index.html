@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>WD-Rechner</title>
-<meta name="description" content="Arbeitszeitrechner für den Winterdienst: Netto-Arbeitszeit, Pausen nach ArbZG, 10-Stunden-Grenze.">
+<meta name="description" content="Arbeitszeitrechner für den Winterdienst: Netto-Arbeitszeit, Pausen nach ArbZG, 10-Stunden-Grenze, Verlauf und Bericht.">
 <meta name="theme-color" content="#009a44">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
@@ -34,6 +34,7 @@
   h1 { font-size: 1.35rem; margin: 0; }
   .sub { margin: 0; opacity: .85; font-size: .9rem; }
   h2 { font-size: 1rem; margin: 0 0 10px; }
+  h3 { font-size: .95rem; margin: 0 0 6px; }
 
   .card { background: var(--karte); border: 1px solid var(--rand); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
   .feld + .feld { margin-top: 18px; }
@@ -48,18 +49,29 @@
     text-align: center; text-align-last: center; padding: 8px 0; cursor: pointer; }
   .uhrzeit select:focus { outline: none; }
   .doppelpunkt { font-size: 1.6rem; color: var(--leise); }
+  input[type=date] { display: block; width: 100%; min-height: 56px; padding: 8px 12px; font: inherit; font-size: 1.25rem;
+    background: var(--feld); color: var(--text); border: 1px solid var(--rand); border-radius: 12px;
+    -webkit-appearance: none; appearance: none; text-align: left; }
+  input[type=date]::-webkit-date-and-time-value { text-align: left; }
+  textarea { display: block; width: 100%; min-height: 72px; padding: 10px 12px; font: inherit; font-size: 1rem;
+    background: var(--feld); color: var(--text); border: 1px solid var(--rand); border-radius: 12px; resize: vertical; }
+  input[type=date]:focus, textarea:focus { outline: 2px solid var(--akzent); outline-offset: 1px; }
 
-  button { font: inherit; cursor: pointer; border: 0; border-radius: 12px; min-height: 52px; color: var(--text);
-    background: #2a323c; padding: 0 16px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-  button:active { transform: scale(.97); }
+  button, .knopf { font: inherit; cursor: pointer; border: 0; border-radius: 12px; min-height: 52px; color: var(--text);
+    background: #2a323c; padding: 0 16px; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+    display: inline-flex; align-items: center; justify-content: center; text-align: center; margin: 0; font-weight: 400; }
+  button:active, .knopf:active { transform: scale(.97); }
+  button:disabled { cursor: default; transform: none; opacity: 1; }
   .jetzt { background: var(--akzent); color: var(--auf-akzent); font-weight: 700; }
   .leeren { width: 52px; padding: 0; color: var(--leise); font-size: 1.1rem; }
   .chips { display: grid; grid-template-columns: 1.7fr repeat(4, 1fr); gap: 6px; }
   .chips button { padding: 0 4px; }
-  .chips button[aria-checked=true] { background: var(--akzent); color: var(--auf-akzent); font-weight: 700; }
+  .chips button[aria-checked=true], .umschalter button[aria-checked=true] { background: var(--akzent); color: var(--auf-akzent); font-weight: 700; }
   .hinweis { color: var(--leise); font-size: .85rem; margin: 6px 0 0; }
+  .hinweis:empty { display: none; }
+  .bearbeiten { background: rgba(255,209,102,.10); border-left: 4px solid var(--gelb); padding: 8px 12px; border-radius: 10px; margin: 0 0 16px; font-size: .9rem; }
 
-  .leer { color: var(--leise); text-align: center; padding: 18px 0; }
+  .leer { color: var(--leise); text-align: center; padding: 18px 0; margin: 0; }
   .kopf { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
   .klein { color: var(--leise); font-size: .9rem; }
   .status { font-size: .8rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
@@ -99,14 +111,50 @@
   .zettelwerte div:last-child dt, .zettelwerte div:last-child dd { border-bottom: 0; }
   .zettelwerte dt { padding-right: 16px; color: var(--leise); }
   .zettelwerte dd { text-align: right; font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .zettelwerte .neben dt, .zettelwerte .neben dd { font-size: .9rem; font-weight: 400; color: var(--leise); }
+  .zettelwerte dd.notiz { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .95rem; font-weight: 400; }
+
+  .aktionen { display: grid; gap: 8px; margin-bottom: 12px; }
+  .haupt { width: 100%; background: var(--akzent); color: var(--auf-akzent); font-weight: 700; }
+  .haupt:disabled { background: #2a323c; color: var(--leise); font-weight: 400; }
+  .rueckmeldung { color: var(--gruen); font-size: .9rem; text-align: center; margin: 0; }
+  .rueckmeldung:empty { display: none; }
+  .rueckmeldung.fehler { color: var(--rot); }
+  .sicherbox { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px;
+    background: rgba(255,209,102,.10); border-left: 4px solid var(--gelb); }
+  .sicherbox p { margin: 0; flex: 1; font-size: .88rem; }
+  .sicherbox button { flex: none; min-height: 44px; padding: 0 14px; background: var(--akzent); color: var(--auf-akzent); font-weight: 700; }
+  .neu { width: 100%; background: transparent; border: 1px solid var(--rand); color: var(--leise); }
+  .sicher { box-shadow: inset 0 0 0 1px var(--rot); color: var(--rot) !important; background: rgba(255,107,107,.08) !important; }
+
+  .umschalter { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+  .zeitraum { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+  .zeitraum button { width: 52px; flex: none; padding: 0; font-size: 1.2rem; }
+  .zeitraum span { text-align: center; font-weight: 700; }
+  .summe { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 10px 12px; margin-bottom: 10px;
+    border-radius: 12px; background: var(--kachel); font-variant-numeric: tabular-nums; }
+  .summe b { font-size: 1.2rem; white-space: nowrap; }
+  .liste { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .eintrag { min-width: 0; background: var(--kachel); border-radius: 12px; }
+  .eintrag .auf { width: 100%; background: transparent; justify-content: space-between; gap: 10px; text-align: left; padding: 10px 12px; min-height: 56px; }
+  .eintrag .auf:active { transform: none; }
+  .eintrag .links { flex: 1; min-width: 0; }
+  .eintrag .links span { display: block; }
+  .eintrag .tagz { font-weight: 700; }
+  .eintrag .detail, .eintrag .notizkurz { color: var(--leise); font-size: .85rem; }
+  .eintrag .notizkurz { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .eintrag .std { font-weight: 800; font-size: 1.2rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .eintrag .std.drueber { color: var(--rot); }
+  .eintrag .mehr { padding: 0 12px 12px; }
+  .eintrag .mehr p { margin: 0 0 10px; font-size: .9rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .zwei { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .zwei > * { width: 100%; }
+  .breit { width: 100%; margin-top: 10px; }
+  .trenner { border: 0; border-top: 1px solid var(--rand); margin: 16px 0; }
 
   .tipp { display: flex; gap: 12px; align-items: flex-start; }
   .tipp p { margin: 0; flex: 1; font-size: .9rem; }
   .tipp button { min-height: 40px; padding: 0 12px; flex: none; }
 
-  .neu { width: 100%; background: transparent; border: 1px solid var(--rand); color: var(--leise); }
-  .neu.sicher { border-color: var(--rot); color: var(--rot); }
   footer { color: var(--leise); font-size: .78rem; margin-top: 20px; }
   footer p { margin: 0 0 8px; }
   [hidden] { display: none !important; }
@@ -129,7 +177,13 @@
     <button id="tippZu" aria-label="Hinweis schließen">OK</button>
   </section>
 
+  <!-- Eingabe -->
   <section class="card">
+    <p class="bearbeiten" id="bearbeitenHinweis" hidden></p>
+    <div class="feld">
+      <label for="datum">Datum <span class="leise">– Tag des Anrufs</span></label>
+      <input type="date" id="datum">
+    </div>
     <div class="feld">
       <label for="anrufH">Anruf / Beginn</label>
       <div class="zeile">
@@ -140,7 +194,7 @@
         </div>
         <button class="jetzt" data-ziel="anruf">Jetzt</button>
       </div>
-      <p class="hinweis" id="anrufDatum">Die Zeit ab dem Anruf zählt.</p>
+      <p class="hinweis">Die Zeit ab dem Anruf zählt.</p>
     </div>
     <div class="feld">
       <label for="endeH">Ende <span class="leise">– leer lassen, solange der Einsatz läuft</span></label>
@@ -153,6 +207,7 @@
         <button class="jetzt" data-ziel="ende">Jetzt</button>
         <button class="leeren" id="endeLeeren" aria-label="Ende löschen">✕</button>
       </div>
+      <p class="hinweis" id="endeHinweis"></p>
     </div>
     <div class="feld">
       <span class="label">Pause</span>
@@ -165,8 +220,13 @@
       </div>
       <p class="hinweis">„Gesetzlich“ rechnet mit der Mindestpause. Habt ihr länger Pause gemacht, die Minuten antippen.</p>
     </div>
+    <div class="feld">
+      <label for="notiz">Notiz <span class="leise">– freiwillig</span></label>
+      <textarea id="notiz" rows="2" maxlength="1000" placeholder="z. B. Bezirk, Fahrzeug, Besonderheiten"></textarea>
+    </div>
   </section>
 
+  <!-- Ergebnis -->
   <section class="card">
     <p class="leer" id="leerHinweis">Anrufzeit eintragen – dann rechnet die App.</p>
     <div id="ergebnisInhalt" hidden>
@@ -199,16 +259,54 @@
       <div><dt>Ende</dt><dd id="zEnde"></dd></div>
       <div><dt>Pause</dt><dd id="zPause"></dd></div>
       <div><dt>Arbeitszeit</dt><dd id="zStunden"></dd></div>
+      <div id="zNotizZeile" hidden><dt>Notiz</dt><dd class="notiz" id="zNotiz"></dd></div>
     </dl>
   </section>
 
-  <button class="neu" id="neu">Neuer Einsatz</button>
+  <div class="aktionen">
+    <button class="haupt" id="speichern" hidden>Einsatz speichern</button>
+    <p class="rueckmeldung" id="rueckmeldung" aria-live="polite"></p>
+    <div class="sicherbox" id="sicherHinweis" hidden>
+      <p id="sicherText"></p>
+      <button data-aktion="sichern">Jetzt sichern</button>
+    </div>
+    <button class="neu" id="neu">Neuer Einsatz</button>
+  </div>
+
+  <!-- Verlauf -->
+  <section class="card" id="verlauf">
+    <h2>Verlauf</h2>
+    <div class="umschalter" id="ansichtChips" role="radiogroup" aria-label="Zeitraum">
+      <button role="radio" data-ansicht="woche">Woche</button>
+      <button role="radio" data-ansicht="monat">Monat</button>
+    </div>
+    <div class="zeitraum">
+      <button id="zurueck" aria-label="Zeitraum zurück">◀</button>
+      <span id="zeitraumText"></span>
+      <button id="vor" aria-label="Zeitraum vor">▶</button>
+    </div>
+    <div class="summe" id="summe"></div>
+    <div class="liste" id="liste"></div>
+    <button class="breit" id="pdf">Bericht als PDF</button>
+    <p class="rueckmeldung" id="verlaufMeldung" aria-live="polite"></p>
+
+    <hr class="trenner">
+    <h3>Sicherung</h3>
+    <p class="hinweis" id="sicherStatus"></p>
+    <div class="zwei" style="margin-top:10px">
+      <button data-aktion="sichern">Jetzt sichern</button>
+      <label class="knopf" for="ladenDatei">Sicherung laden</label>
+    </div>
+    <input type="file" id="ladenDatei" hidden>
+    <p class="hinweis">Die Sicherung ist eine kleine Datei mit allen Einträgen. Über „Teilen“ z. B. in iCloud Drive, „Dateien“ oder per Mail ablegen. Beim Laden werden fehlende Einträge ergänzt – nichts wird überschrieben.</p>
+    <p class="hinweis" id="iosHinweis" hidden>iPhone: Die App vom Home-Bildschirm hat einen eigenen Speicher. Den Rechner deshalb immer über das grüne Symbol öffnen, nicht über Safari.</p>
+  </section>
 
   <footer>
     <p>Privates Hilfsmittel, keine offizielle Anwendung der Stadt. Ohne Gewähr – maßgeblich sind ZMI und euer Stundenzettel.</p>
     <p>Grundlage: § 3 ArbZG (höchstens 10 Stunden), § 4 ArbZG (mind. 30 Min. Pause bei mehr als 6 Std., 45 Min. bei mehr als 9 Std., aufteilbar in Blöcke von mind. 15 Min.).</p>
     <p>Uhrzeiten nur in Viertelstunden. „Jetzt“ rundet beim Beginn ab und beim Ende auf; solange der Einsatz läuft, wird bis zur nächsten Viertelstunde gerechnet.</p>
-    <p>Alle Eingaben bleiben auf diesem Handy.</p>
+    <p>Alle Eingaben und der Verlauf bleiben auf diesem Handy. Es wird nichts übertragen.</p>
   </footer>
 </main>
 
@@ -243,6 +341,15 @@ function anwesenheitFuer(ziel, pauseWahl) {
   }
   return null;
 }
+
+// Kalenderwoche nach ISO 8601 (Montag bis Sonntag; KW 1 enthält den ersten Donnerstag des Jahres)
+function kalenderwoche(d) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  t.setUTCDate(t.getUTCDate() - ((t.getUTCDay() + 6) % 7) + 3);      // Donnerstag dieser Woche
+  const kw1 = new Date(Date.UTC(t.getUTCFullYear(), 0, 4));
+  kw1.setUTCDate(kw1.getUTCDate() - ((kw1.getUTCDay() + 6) % 7) + 3); // Donnerstag der KW 1
+  return { kw: 1 + Math.round((t - kw1) / (7 * 86400000)), jahr: t.getUTCFullYear() };
+}
 // LOGIK-ENDE
 
 const $ = id => document.getElementById(id);
@@ -259,7 +366,13 @@ const plusMin = (d, m) => new Date(d.getTime() + m * 60000);
 const hmText = m => Math.floor(m / 60) + ':' + pad(m % 60);
 const dez = m => (m / 60).toFixed(2).replace('.', ',');
 const TAGE = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+const MONATE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 const datumText = d => TAGE[d.getDay()] + ', ' + pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.' + d.getFullYear();
+const kurzDatum = d => TAGE[d.getDay()] + ', ' + pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.';
+const zeitpunktText = d => datumText(d) + ', ' + uhr(d) + ' Uhr';
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const neueId = () => 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const gleicherTag = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 function uhrMitTag(d, bezug) {
   const a = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const b = new Date(bezug.getFullYear(), bezug.getMonth(), bezug.getDate());
@@ -289,32 +402,102 @@ function zeigeZeit(f, v) {
   else { $(f + 'H').value = ''; $(f + 'M').value = '00'; }
 }
 
-// ---------- Speicher ----------
-const SPEICHER = 'wd-rechner-v1';
-const LEER = { anruf: '', tag: '', ende: '', pause: 'auto' };
+// Einen gespeicherten Einsatz auswerten
+function auswerten(e) {
+  const start = datumAus(e.tag, e.anruf);
+  const ende = datumAus(e.tag, e.ende);
+  if (ende < start) ende.setDate(ende.getDate() + 1); // über Mitternacht
+  const anw = Math.max(0, Math.round((ende - start) / 60000));
+  const pauseWahl = e.pause === 'auto' ? null : Number(e.pause);
+  return Object.assign({ start, ende, ueberNacht: !gleicherTag(start, ende) }, berechne(anw, pauseWahl));
+}
+
+// ---------- Speicher (nur auf diesem Gerät) ----------
+const SPEICHER = 'wd-rechner-v1';          // aktueller Einsatz
+const VERLAUF = 'wd-rechner-verlauf';      // gespeicherte Einsätze
+const SICHERUNG = 'wd-rechner-sicherung';  // Stand der letzten Sicherung
+const LEER = { anruf: '', tag: '', ende: '', pause: 'auto', notiz: '', tagManuell: false, bearbeiteId: '', geaendert: false };
+const lesen = schluessel => { try { return JSON.parse(localStorage.getItem(schluessel)); } catch (e) { return null; } };
+const schreiben = (schluessel, wert) => { try { localStorage.setItem(schluessel, JSON.stringify(wert)); return true; } catch (e) { return false; } };
+
 let st = Object.assign({}, LEER);
-try {
-  const s = JSON.parse(localStorage.getItem(SPEICHER));
-  if (s && typeof s === 'object') st = Object.assign(st, s);
-} catch (e) {}
+const gespeichert = lesen(SPEICHER);
+if (gespeichert && typeof gespeichert === 'object') st = Object.assign(st, gespeichert);
 if (st.anruf && !st.tag) st.tag = tagStr(new Date());
-function speichern() { try { localStorage.setItem(SPEICHER, JSON.stringify(st)); } catch (e) {} }
+const speichern = () => schreiben(SPEICHER, st);
+
+const PAUSEN = ['auto', '15', '30', '45', '60'];
+const gueltig = x => x && /^\d{4}-\d{2}-\d{2}$/.test(x.tag) && /^\d{2}:\d{2}$/.test(x.anruf) && /^\d{2}:\d{2}$/.test(x.ende);
+let verlauf = (lesen(VERLAUF) || []).filter(gueltig);
+const sortieren = () => verlauf.sort((a, b) => (a.tag + a.anruf).localeCompare(b.tag + b.anruf));
+const speichereVerlauf = () => schreiben(VERLAUF, verlauf);
+
+let sich = Object.assign({ zuletzt: '', aenderungen: 0 }, lesen(SICHERUNG) || {});
+const speichereSich = () => schreiben(SICHERUNG, sich);
+function aenderungGemacht() { sich.aenderungen = (sich.aenderungen || 0) + 1; speichereSich(); }
+
+// Browser bitten, den Speicher nicht von selbst zu leeren (vor allem Android)
+function bitteDauerhaft() {
+  try {
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persisted().then(ja => { if (!ja) navigator.storage.persist(); }).catch(() => {});
+    }
+  } catch (e) {}
+}
+
+// ---------- Hilfen ----------
+// Zweimal tippen zum Bestätigen (statt Dialogfenster)
+function sicherFrage(btn, frage) {
+  if (btn.dataset.sicher === '1') {
+    clearTimeout(btn._zeit);
+    btn.dataset.sicher = ''; btn.classList.remove('sicher'); btn.textContent = btn.dataset.text;
+    return true;
+  }
+  btn.dataset.text = btn.textContent; btn.dataset.sicher = '1';
+  btn.classList.add('sicher'); btn.textContent = frage;
+  btn._zeit = setTimeout(() => { btn.dataset.sicher = ''; btn.classList.remove('sicher'); btn.textContent = btn.dataset.text; }, 3500);
+  return false;
+}
+function meldung(el, text, fehler) {
+  el.textContent = text;
+  el.classList.toggle('fehler', !!fehler);
+  clearTimeout(el._zeit);
+  el._zeit = setTimeout(() => { el.textContent = ''; }, 5000);
+}
+// Datei über "Teilen" weitergeben, sonst herunterladen
+async function teileDatei(blob, name, typ) {
+  try {
+    const datei = new File([blob], name, { type: typ });
+    if (navigator.canShare && navigator.canShare({ files: [datei] })) {
+      await navigator.share({ files: [datei], title: name });
+      return 'geteilt';
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return 'abgebrochen';
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  return 'geladen';
+}
 
 // ---------- Eingaben ----------
+function autoTag(v) {
+  const jetzt = new Date();
+  const d = new Date(jetzt);
+  // Liegt die Uhrzeit deutlich nach "jetzt", war der Anruf gestern (z. B. 22:00 eingetragen um 02:00)
+  if (zuMin(v) > jetzt.getHours() * 60 + jetzt.getMinutes() + 30) d.setDate(d.getDate() - 1);
+  return tagStr(d);
+}
 function setzeAnruf(v) {
   st.anruf = v;
-  if (v) {
-    const jetzt = new Date();
-    const d = new Date(jetzt);
-    // Liegt die Uhrzeit deutlich nach "jetzt", war der Anruf gestern (z. B. 22:00 eingetragen um 02:00)
-    if (zuMin(v) > jetzt.getHours() * 60 + jetzt.getMinutes() + 30) d.setDate(d.getDate() - 1);
-    st.tag = tagStr(d);
-  } else {
-    st.tag = '';
-  }
-  speichern(); render();
+  if (v && (!st.tagManuell || !st.tag)) st.tag = autoTag(v);
+  if (!v && !st.tagManuell) st.tag = '';
+  st.geaendert = true; speichern(); renderEinsatz();
 }
-function setzeEnde(v) { st.ende = v; speichern(); render(); }
+function setzeEnde(v) { st.ende = v; st.geaendert = true; speichern(); renderEinsatz(); }
 
 ['H', 'M'].forEach(t => {
   $('anruf' + t).addEventListener('change', () => setzeAnruf(leseZeit('anruf')));
@@ -329,39 +512,88 @@ document.querySelectorAll('button.jetzt').forEach(b => b.addEventListener('click
 }));
 $('endeLeeren').addEventListener('click', () => { zeigeZeit('ende', ''); setzeEnde(''); });
 
+$('datum').addEventListener('change', e => {
+  const v = e.target.value;
+  if (v) { st.tag = v; st.tagManuell = true; }
+  else { st.tagManuell = false; st.tag = st.anruf ? autoTag(st.anruf) : ''; }
+  st.geaendert = true; speichern(); renderEinsatz();
+});
+$('notiz').addEventListener('input', e => { st.notiz = e.target.value; st.geaendert = true; speichern(); renderEinsatz(); });
+
 function chipsZeigen() {
   document.querySelectorAll('#pauseChips button').forEach(b =>
     b.setAttribute('aria-checked', String(b.dataset.p === String(st.pause))));
 }
 document.querySelectorAll('#pauseChips button').forEach(b => b.addEventListener('click', () => {
-  st.pause = b.dataset.p; speichern(); chipsZeigen(); render();
+  st.pause = b.dataset.p; st.geaendert = true; speichern(); chipsZeigen(); renderEinsatz();
 }));
 
-let neuTimer = null;
-$('neu').addEventListener('click', () => {
-  const b = $('neu');
-  if (!b.classList.contains('sicher')) {
-    b.classList.add('sicher');
-    b.textContent = 'Wirklich alles löschen? Nochmal tippen';
-    neuTimer = setTimeout(() => { b.classList.remove('sicher'); b.textContent = 'Neuer Einsatz'; }, 3000);
+function formularFuellen() {
+  zeigeZeit('anruf', st.anruf);
+  zeigeZeit('ende', st.ende);
+  $('notiz').value = st.notiz || '';
+  chipsZeigen();
+}
+
+// ---------- Speichern im Verlauf ----------
+$('speichern').addEventListener('click', () => {
+  if (!(st.anruf && st.tag && st.ende)) return;
+  const id = st.bearbeiteId || neueId();
+  const eintrag = { id, tag: st.tag, anruf: st.anruf, ende: st.ende, pause: st.pause,
+    notiz: (st.notiz || '').trim(), gespeichert: new Date().toISOString() };
+  const doppelt = verlauf.find(x => x.id !== id && x.tag === eintrag.tag && x.anruf === eintrag.anruf);
+  verlauf = verlauf.filter(x => x.id !== id && x !== doppelt);
+  verlauf.push(eintrag);
+  sortieren();
+  if (!speichereVerlauf()) {
+    meldung($('rueckmeldung'), 'Speichern nicht möglich – der Speicher des Browsers ist gesperrt oder voll.', true);
     return;
   }
-  clearTimeout(neuTimer);
-  b.classList.remove('sicher'); b.textContent = 'Neuer Einsatz';
+  aenderungGemacht();
+  bitteDauerhaft();
+  ladeJsPdf().catch(() => {});
+  st.bearbeiteId = id; st.tagManuell = true; st.geaendert = false; speichern();
+  ansichtBezug = datumAus(eintrag.tag, '12:00');
+  offenId = '';
+  meldung($('rueckmeldung'), doppelt
+    ? '✓ Gespeichert – der Einsatz mit gleichem Datum und Beginn wurde ersetzt.'
+    : '✓ Im Verlauf gespeichert');
+  renderAlles();
+});
+
+$('neu').addEventListener('click', () => {
+  const b = $('neu');
+  if (st.geaendert && st.anruf && !sicherFrage(b, 'Nicht gespeichert – trotzdem verwerfen?')) return;
   st = Object.assign({}, LEER);
-  zeigeZeit('anruf', ''); zeigeZeit('ende', '');
-  speichern(); chipsZeigen(); render();
+  speichern(); formularFuellen(); renderEinsatz();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-// ---------- Anzeige ----------
-function render() {
+function ladeEintrag(e) {
+  st = Object.assign({}, LEER, { anruf: e.anruf, tag: e.tag, ende: e.ende,
+    pause: PAUSEN.includes(String(e.pause)) ? String(e.pause) : 'auto',
+    notiz: e.notiz || '', tagManuell: true, bearbeiteId: e.id, geaendert: false });
+  speichern(); formularFuellen(); renderEinsatz();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ---------- Anzeige: aktueller Einsatz ----------
+function renderEinsatz() {
   const hat = !!(st.anruf && st.tag);
+  const datumWert = st.tag || tagStr(new Date());
+  if ($('datum').value !== datumWert) $('datum').value = datumWert;
+
+  const bh = $('bearbeitenHinweis');
+  bh.hidden = !st.bearbeiteId;
+  bh.textContent = st.geaendert
+    ? 'Gespeicherten Einsatz bearbeiten – Änderungen mit „Änderung speichern“ übernehmen.'
+    : 'Gespeicherter Einsatz aus dem Verlauf.';
+
   $('leerHinweis').hidden = hat;
   $('ergebnisInhalt').hidden = !hat;
   $('planung').hidden = !hat;
   $('zettel').hidden = !hat;
-  if (!hat) { $('anrufDatum').textContent = 'Die Zeit ab dem Anruf zählt.'; return; }
+  if (!hat) { $('endeHinweis').textContent = ''; renderSpeichernKnopf(false, false); return; }
 
   const start = datumAus(st.tag, st.anruf);
   const jetzt = new Date();
@@ -373,6 +605,8 @@ function render() {
     ende = datumAus(st.tag, st.ende);
     if (ende < start) ende.setDate(ende.getDate() + 1); // über Mitternacht
   }
+  $('endeHinweis').textContent = !laeuft && !gleicherTag(start, ende) ? 'Ende am Folgetag (über Mitternacht).' : '';
+
   let anw = Math.floor((ende - start) / 60000);
   const meld = [];
   if (anw < 0) { meld.push(['gelb', 'Die Anrufzeit liegt noch in der Zukunft.']); anw = 0; }
@@ -381,7 +615,6 @@ function render() {
   const r = berechne(anw, pauseWahl);
   const rest = MAX_NETTO - r.netto;
 
-  $('anrufDatum').textContent = 'Einsatz vom ' + datumText(start);
   $('modus').textContent = laeuft ? 'Bisher netto · Einsatz läuft' : 'Netto-Arbeitszeit';
   $('netto').innerHTML = hmText(r.netto) + ' <small>Std.</small>';
   $('netto').classList.toggle('drueber', rest < 0);
@@ -427,16 +660,319 @@ function render() {
     : uhrMitTag(ende, start) + ' Uhr';
   $('zPause').textContent = r.pause + ' Min.';
   $('zStunden').textContent = hmText(r.netto) + ' Std. = ' + dez(r.netto);
+  const notiz = (st.notiz || '').trim();
+  $('zNotizZeile').hidden = !notiz;
+  $('zNotiz').textContent = notiz;
+
+  renderSpeichernKnopf(true, laeuft);
 }
 
+function renderSpeichernKnopf(hat, laeuft) {
+  const b = $('speichern');
+  b.hidden = !hat;
+  if (!hat) return;
+  if (laeuft) { b.disabled = true; b.textContent = 'Zum Speichern Ende eintragen'; }
+  else if (st.bearbeiteId && !st.geaendert) { b.disabled = true; b.textContent = 'Im Verlauf gespeichert ✓'; }
+  else { b.disabled = false; b.textContent = st.bearbeiteId ? 'Änderung speichern' : 'Einsatz speichern'; }
+}
+
+// ---------- Verlauf ----------
+let ansicht = 'woche';
+let ansichtBezug = new Date();
+let offenId = '';
+
+function wochenStart(d) {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+  return x;
+}
+function zeitraum() {
+  const b = ansichtBezug;
+  if (ansicht === 'woche') {
+    const von = wochenStart(b);
+    const bis = new Date(von); bis.setDate(bis.getDate() + 7);
+    const letzter = new Date(von); letzter.setDate(letzter.getDate() + 6);
+    const k = kalenderwoche(von);
+    return {
+      von, bis,
+      titel: 'KW ' + k.kw + ' · ' + pad(von.getDate()) + '.' + pad(von.getMonth() + 1) + '. – ' +
+        pad(letzter.getDate()) + '.' + pad(letzter.getMonth() + 1) + '.' + letzter.getFullYear(),
+      pdfTitel: 'Kalenderwoche ' + k.kw + '/' + k.jahr + ' (' + pad(von.getDate()) + '.' + pad(von.getMonth() + 1) + '.' + von.getFullYear() +
+        ' - ' + pad(letzter.getDate()) + '.' + pad(letzter.getMonth() + 1) + '.' + letzter.getFullYear() + ')',
+      datei: 'WD-Bericht_' + k.jahr + '-KW' + pad(k.kw) + '.pdf'
+    };
+  }
+  const von = new Date(b.getFullYear(), b.getMonth(), 1);
+  const bis = new Date(b.getFullYear(), b.getMonth() + 1, 1);
+  const titel = MONATE[von.getMonth()] + ' ' + von.getFullYear();
+  return { von, bis, titel, pdfTitel: titel, datei: 'WD-Bericht_' + von.getFullYear() + '-' + pad(von.getMonth() + 1) + '.pdf' };
+}
+function eintraegeIn(z) {
+  return verlauf.filter(e => { const d = datumAus(e.tag, '12:00'); return d >= z.von && d < z.bis; });
+}
+
+function renderVerlauf() {
+  document.querySelectorAll('#ansichtChips button').forEach(b =>
+    b.setAttribute('aria-checked', String(b.dataset.ansicht === ansicht)));
+  const z = zeitraum();
+  const liste = eintraegeIn(z);
+  $('zeitraumText').textContent = z.titel;
+
+  let summe = 0;
+  const html = liste.map(e => {
+    const a = auswerten(e);
+    summe += a.netto;
+    const offen = e.id === offenId;
+    return '<div class="eintrag" data-id="' + esc(e.id) + '">' +
+      '<button class="auf" data-aktion="auf" aria-expanded="' + offen + '">' +
+        '<span class="links">' +
+          '<span class="tagz">' + kurzDatum(a.start) + '</span>' +
+          '<span class="detail">' + e.anruf + '–' + e.ende + (a.ueberNacht ? ' (+1)' : '') + ' · Pause ' + a.pause + ' Min.</span>' +
+          (e.notiz && !offen ? '<span class="notizkurz">' + esc(e.notiz) + '</span>' : '') +
+        '</span>' +
+        '<span class="std' + (a.netto > MAX_NETTO ? ' drueber' : '') + '">' + hmText(a.netto) + '</span>' +
+      '</button>' +
+      (offen
+        ? '<div class="mehr">' + (e.notiz ? '<p>' + esc(e.notiz) + '</p>' : '') +
+          '<p class="leise">Anwesend ' + hmText(a.anw) + ' Std. · netto ' + dez(a.netto) + ' Std.</p>' +
+          '<div class="zwei"><button data-aktion="bearbeiten">Bearbeiten</button><button data-aktion="loeschen">Löschen</button></div></div>'
+        : '') +
+    '</div>';
+  }).join('');
+  $('liste').innerHTML = html || '<p class="leer">Keine Einsätze in diesem Zeitraum.</p>';
+  $('summe').innerHTML = '<span>' + liste.length + (liste.length === 1 ? ' Einsatz' : ' Einsätze') + '</span>' +
+    '<b>' + hmText(summe) + ' Std. = ' + dez(summe) + '</b>';
+  $('pdf').disabled = !liste.length;
+  $('pdf').textContent = 'Bericht als PDF';
+}
+
+document.querySelectorAll('#ansichtChips button').forEach(b => b.addEventListener('click', () => {
+  ansicht = b.dataset.ansicht; offenId = ''; renderVerlauf();
+}));
+$('zurueck').addEventListener('click', () => { verschieben(-1); });
+$('vor').addEventListener('click', () => { verschieben(1); });
+function verschieben(richtung) {
+  const b = new Date(ansichtBezug);
+  if (ansicht === 'woche') b.setDate(b.getDate() + 7 * richtung);
+  else { b.setDate(1); b.setMonth(b.getMonth() + richtung); }
+  ansichtBezug = b; offenId = ''; renderVerlauf();
+}
+
+$('liste').addEventListener('click', ev => {
+  const btn = ev.target.closest('button[data-aktion]');
+  if (!btn) return;
+  const id = btn.closest('.eintrag').dataset.id;
+  const e = verlauf.find(x => x.id === id);
+  if (!e) return;
+  const aktion = btn.dataset.aktion;
+  if (aktion === 'auf') { offenId = offenId === id ? '' : id; renderVerlauf(); return; }
+  if (aktion === 'bearbeiten') {
+    if (st.geaendert && st.anruf && st.bearbeiteId !== id && !sicherFrage(btn, 'Eingabe oben verwerfen?')) return;
+    ladeEintrag(e);
+    return;
+  }
+  if (aktion === 'loeschen') {
+    if (!sicherFrage(btn, 'Wirklich löschen?')) return;
+    verlauf = verlauf.filter(x => x.id !== id);
+    speichereVerlauf();
+    aenderungGemacht();
+    if (st.bearbeiteId === id) { st.bearbeiteId = ''; st.geaendert = true; speichern(); }
+    offenId = '';
+    meldung($('verlaufMeldung'), 'Eintrag gelöscht.');
+    renderAlles();
+  }
+});
+
+// ---------- Bericht als PDF ----------
+let jsPdfLaden = null;
+function ladeJsPdf() {
+  if (window.jspdf) return Promise.resolve(window.jspdf);
+  if (!jsPdfLaden) {
+    jsPdfLaden = new Promise((ok, nein) => {
+      const s = document.createElement('script');
+      s.src = 'jspdf.umd.min.js';
+      s.onload = () => ok(window.jspdf);
+      s.onerror = () => { jsPdfLaden = null; s.remove(); nein(new Error('nicht geladen')); };
+      document.head.appendChild(s);
+    });
+  }
+  return jsPdfLaden;
+}
+
+function baueBericht(z, liste) {
+  const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+  const L = 15, R = 195, UNTEN = 272;
+  const FS = 9.5, ZH = FS * 1.25 * 0.3528; // Schriftgröße, Zeilenhöhe in mm
+  doc.setLineHeightFactor(1.25);
+  const sp = { datum: L + 1.5, beginn: 42, ende: 58, pause: 78, std: 104, dez: 120, notiz: 126 };
+  const notizBreite = R - sp.notiz - 1;
+  let y = 20;
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
+  doc.text('Winterdienst - persönliche Arbeitszeitaufstellung', L, y);
+  y += 7;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(11);
+  doc.text(z.pdfTitel, L, y);
+  y += 9;
+
+  function kopfzeile() {
+    doc.setFillColor(225, 241, 231);
+    doc.rect(L, y - 4.6, R - L, 7, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(FS); doc.setTextColor(0);
+    doc.text('Datum', sp.datum, y); doc.text('Beginn', sp.beginn, y); doc.text('Ende', sp.ende, y);
+    doc.text('Pause', sp.pause, y); doc.text('Std.', sp.std, y, { align: 'right' });
+    doc.text('Dezimal', sp.dez, y, { align: 'right' }); doc.text('Notiz', sp.notiz, y);
+    doc.setFont('helvetica', 'normal');
+    y += 7;
+  }
+  kopfzeile();
+
+  let summe = 0, ueber10 = 0;
+  doc.setDrawColor(205, 214, 208); doc.setLineWidth(0.2);
+  liste.forEach(e => {
+    const a = auswerten(e);
+    summe += a.netto;
+    if (a.netto > MAX_NETTO) ueber10++;
+    doc.setFontSize(FS);
+    const zeilen = e.notiz ? doc.splitTextToSize(e.notiz.replace(/\r/g, ''), notizBreite) : [];
+    const hoehe = Math.max(1, zeilen.length) * ZH;
+    if (y + hoehe > UNTEN) { doc.addPage(); y = 20; kopfzeile(); }
+    doc.text(kurzDatum(a.start) + String(a.start.getFullYear()).slice(2), sp.datum, y);
+    doc.text(e.anruf, sp.beginn, y);
+    doc.text(e.ende + (a.ueberNacht ? ' (+1)' : ''), sp.ende, y);
+    doc.text(a.pause + ' Min.', sp.pause, y);
+    if (a.netto > MAX_NETTO) doc.setTextColor(200, 30, 30);
+    doc.text(hmText(a.netto), sp.std, y, { align: 'right' });
+    doc.text(dez(a.netto), sp.dez, y, { align: 'right' });
+    doc.setTextColor(0);
+    if (zeilen.length) doc.text(zeilen, sp.notiz, y);
+    const unten = y + hoehe - ZH + 2.3;
+    doc.line(L, unten, R, unten);
+    y = unten + 5;
+  });
+
+  if (y + 12 > UNTEN) { doc.addPage(); y = 20; }
+  doc.setLineWidth(0.5); doc.setDrawColor(0, 154, 68);
+  doc.line(L, y - 3.2, R, y - 3.2);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5);
+  doc.text('Summe (' + liste.length + (liste.length === 1 ? ' Einsatz)' : ' Einsätze)'), sp.datum, y + 1.5);
+  doc.text(hmText(summe), sp.std, y + 1.5, { align: 'right' });
+  doc.text(dez(summe), sp.dez, y + 1.5, { align: 'right' });
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(90);
+  y += 10;
+  const hinweise = [
+    'Arbeitszeit = Anwesenheit ab Anruf abzüglich Pause (mindestens die gesetzliche Pause nach § 4 ArbZG). Uhrzeiten in Viertelstunden.',
+    '(+1) = Ende am Folgetag.' + (ueber10 ? ' Rot = mehr als 10 Stunden netto (§ 3 ArbZG).' : '')
+  ];
+  hinweise.forEach(t => { const z2 = doc.splitTextToSize(t, R - L); if (y > UNTEN) { doc.addPage(); y = 20; } doc.text(z2, L, y); y += z2.length * 3.8 + 1; });
+
+  const seiten = doc.getNumberOfPages();
+  const erstellt = 'Erstellt am ' + zeitpunktText(new Date()) + ' mit dem WD-Rechner (privates Hilfsmittel).';
+  for (let i = 1; i <= seiten; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8); doc.setTextColor(120);
+    doc.text(erstellt, L, 287);
+    doc.text('Maßgeblich sind ZMI und der Stundenzettel.', L, 291);
+    doc.text('Seite ' + i + ' von ' + seiten, R, 287, { align: 'right' });
+  }
+  return doc.output('blob');
+}
+
+$('pdf').addEventListener('click', async () => {
+  const z = zeitraum();
+  const liste = eintraegeIn(z);
+  if (!liste.length) return;
+  const btn = $('pdf');
+  if (!window.jspdf) {
+    // Baustein nachladen; danach erneut tippen (iPhone verlangt das Teilen direkt nach dem Tippen)
+    btn.disabled = true; btn.textContent = 'PDF wird vorbereitet …';
+    try {
+      await ladeJsPdf();
+      btn.textContent = 'PDF bereit – nochmal tippen';
+    } catch (e) {
+      btn.textContent = 'Bericht als PDF';
+      meldung($('verlaufMeldung'), 'PDF-Baustein nicht verfügbar – die App einmal mit Internet öffnen.', true);
+    }
+    btn.disabled = false;
+    return;
+  }
+  let blob;
+  try { blob = baueBericht(z, liste); }
+  catch (e) { meldung($('verlaufMeldung'), 'PDF konnte nicht erstellt werden.', true); return; }
+  const r = await teileDatei(blob, z.datei, 'application/pdf');
+  btn.textContent = 'Bericht als PDF';
+  if (r !== 'abgebrochen') meldung($('verlaufMeldung'), '✓ ' + z.datei + (r === 'geladen' ? ' heruntergeladen' : ' erstellt'));
+});
+
+// ---------- Sicherung ----------
+function renderSicherung() {
+  const n = sich.aenderungen || 0;
+  const wann = sich.zuletzt ? zeitpunktText(new Date(sich.zuletzt)) : 'noch nie';
+  const offen = n > 0 && verlauf.length > 0;
+  const was = (n === 1 ? '1 Änderung' : n + ' Änderungen') + ' noch nicht gesichert';
+  $('sicherHinweis').hidden = !offen;
+  $('sicherText').textContent = was + ' · letzte Sicherung: ' + wann;
+  $('sicherStatus').textContent = !verlauf.length && !sich.zuletzt
+    ? 'Noch keine Einträge im Verlauf.'
+    : offen ? was + '. Letzte Sicherung: ' + wann + '.'
+    : 'Alles gesichert ✓ · letzte Sicherung: ' + wann;
+}
+
+async function sichern(btn) {
+  const daten = { app: 'wd-rechner', format: 1, erstellt: new Date().toISOString(), eintraege: verlauf };
+  const name = 'WD-Sicherung_' + tagStr(new Date()) + '.json';
+  const blob = new Blob([JSON.stringify(daten, null, 1)], { type: 'application/json' });
+  const r = await teileDatei(blob, name, 'application/json');
+  if (r === 'abgebrochen') return;
+  sich.zuletzt = new Date().toISOString();
+  sich.aenderungen = 0;
+  speichereSich();
+  renderSicherung();
+  meldung($('verlaufMeldung'), '✓ Sicherung ' + name + (r === 'geladen' ? ' heruntergeladen' : ' erstellt'));
+}
+document.querySelectorAll('button[data-aktion="sichern"]').forEach(b => b.addEventListener('click', () => sichern(b)));
+
+$('ladenDatei').addEventListener('change', async ev => {
+  const f = ev.target.files && ev.target.files[0];
+  ev.target.value = '';
+  if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    const liste = Array.isArray(d) ? d : (d && Array.isArray(d.eintraege) ? d.eintraege : null);
+    if (!liste) throw new Error('keine Einträge');
+    let neu = 0, da = 0;
+    liste.forEach(x => {
+      if (!gueltig(x)) return;
+      if (verlauf.some(v => v.id === x.id || (v.tag === x.tag && v.anruf === x.anruf))) { da++; return; }
+      verlauf.push({ id: typeof x.id === 'string' && x.id ? x.id : neueId(), tag: x.tag, anruf: x.anruf, ende: x.ende,
+        pause: PAUSEN.includes(String(x.pause)) ? String(x.pause) : 'auto',
+        notiz: typeof x.notiz === 'string' ? x.notiz.slice(0, 1000) : '',
+        gespeichert: typeof x.gespeichert === 'string' ? x.gespeichert : new Date().toISOString() });
+      neu++;
+    });
+    sortieren();
+    if (!speichereVerlauf()) throw new Error('Speicher gesperrt');
+    if (neu) bitteDauerhaft();
+    meldung($('verlaufMeldung'), neu
+      ? '✓ ' + (neu === 1 ? '1 Eintrag' : neu + ' Einträge') + ' übernommen' + (da ? ', ' + da + ' waren schon vorhanden.' : '.')
+      : 'Nichts Neues – alle ' + da + ' Einträge der Sicherung sind schon vorhanden.');
+    renderAlles();
+  } catch (e) {
+    meldung($('verlaufMeldung'), 'Die Datei ist keine gültige Sicherung des WD-Rechners.', true);
+  }
+});
+
+function renderAlles() { renderEinsatz(); renderVerlauf(); renderSicherung(); }
+
 // ---------- Hinweis "Zum Home-Bildschirm" ----------
+const istApp = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+const istIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+$('iosHinweis').hidden = !istIOS;
 (function () {
-  const istApp = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
   let gesehen = false;
   try { gesehen = localStorage.getItem('wd-rechner-tipp') === '1'; } catch (e) {}
   if (istApp || gesehen) return;
-  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
-  $('tippText').textContent = ios
+  $('tippText').textContent = istIOS
     ? 'Tipp: Unten auf „Teilen“ tippen und „Zum Home-Bildschirm“ wählen – dann ist der Rechner wie eine App auf dem Handy.'
     : 'Tipp: Im Browser-Menü „App installieren“ bzw. „Zum Startbildschirm hinzufügen“ wählen – dann ist der Rechner wie eine App auf dem Handy.';
   $('tipp').hidden = false;
@@ -450,12 +986,14 @@ function render() {
 // Alte, nicht viertelstündige Werte angleichen
 st.anruf = textAb(st.anruf);
 st.ende = textAuf(st.ende);
-zeigeZeit('anruf', st.anruf);
-zeigeZeit('ende', st.ende);
-chipsZeigen();
-render();
-setInterval(() => { if (st.anruf && !st.ende) render(); }, 15000);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+formularFuellen();
+renderAlles();
+setInterval(() => { if (st.anruf && !st.ende) renderEinsatz(); }, 15000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) renderEinsatz(); });
+if (verlauf.length) {
+  bitteDauerhaft();
+  setTimeout(() => ladeJsPdf().catch(() => {}), 2500); // PDF-Baustein vorab laden
+}
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
