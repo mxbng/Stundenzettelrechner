@@ -1,6 +1,6 @@
-# WD-Rechner
+# Stundenrechner
 
-Kleiner Arbeitszeitrechner für den Winterdienst als Web-App. Er läuft im Browser, kann auf dem iPhone oder Android-Handy auf den Home-Bildschirm gelegt werden und funktioniert danach auch offline. Alle Eingaben bleiben auf dem jeweiligen Handy.
+Kleiner Arbeitszeitrechner als Web-App. Er läuft im Browser, kann auf dem iPhone oder Android-Handy auf den Home-Bildschirm gelegt werden und funktioniert danach auch offline. Alle Eingaben bleiben auf dem jeweiligen Handy.
 
 ## Was er rechnet
 
@@ -28,7 +28,7 @@ Alle Daten bleiben im Browser des jeweiligen Handys (localStorage). Es gibt kein
 
 ## Änderungen veröffentlichen
 
-Nach jeder Änderung in `sw.js` die Zeile `const CACHE = 'wd-rechner-v4';` hochzählen (v5, v6 …).
+Nach jeder Änderung in `sw.js` die Zeile `const CACHE = 'wd-rechner-v8';` hochzählen (v9, v10 …).
 Sonst sehen Handys, auf denen die App schon installiert ist, die neue Version nicht.
 
 ## Dateien

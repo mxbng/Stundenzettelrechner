@@ -1,7 +1,7 @@
 {
-  "name": "WD-Rechner – Arbeitszeit im Winterdienst",
-  "short_name": "WD-Rechner",
-  "description": "Netto-Arbeitszeit, Pausen nach ArbZG und 10-Stunden-Grenze für den Winterdienst.",
+  "name": "Stundenrechner",
+  "short_name": "Stundenrechner",
+  "description": "Netto-Arbeitszeit, Pausen nach ArbZG, 10-Stunden-Grenze, Verlauf und Bericht.",
   "lang": "de",
   "start_url": "./",
   "scope": "./",

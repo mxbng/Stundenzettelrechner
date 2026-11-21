@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>WD-Rechner</title>
-<meta name="description" content="Arbeitszeitrechner für den Winterdienst: Netto-Arbeitszeit, Pausen nach ArbZG, 10-Stunden-Grenze, Verlauf und Bericht.">
+<title>Stundenrechner</title>
+<meta name="description" content="Stundenrechner: Netto-Arbeitszeit, Pausen nach ArbZG, 10-Stunden-Grenze, Verlauf und Bericht.">
 <meta name="theme-color" content="#009a44">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="WD-Rechner">
+<meta name="apple-mobile-web-app-title" content="Stundenrechner">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
   :root {
@@ -201,8 +201,8 @@
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#009a44" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 6.5V12l3.6 2.1"/></svg>
     </div>
     <div>
-      <h1>WD-Rechner</h1>
-      <p class="sub">Arbeitszeit im Winterdienst</p>
+      <h1>Stundenrechner</h1>
+      <p class="sub">Arbeitszeit · Pausen · Verlauf</p>
     </div>
   </header>
 
@@ -341,7 +341,7 @@
       <label class="knopf" for="ladenDatei">Sicherung laden</label>
     </div>
     <input type="file" id="ladenDatei" hidden>
-    <p class="hinweis">Die Sicherung ist <b>eine</b> Datei „WD-Sicherung.json“ mit allen Einträgen. Immer am selben Ort speichern (z. B. iCloud Drive oder „Dateien“) und die alte Datei ersetzen – sie enthält ohnehin alles. Beim Laden werden fehlende Einträge ergänzt, nichts wird überschrieben.</p>
+    <p class="hinweis">Die Sicherung ist <b>eine</b> Datei „Stundenrechner-Sicherung.json“ mit allen Einträgen. Immer am selben Ort speichern (z. B. iCloud Drive oder „Dateien“) und die alte Datei ersetzen – sie enthält ohnehin alles. Beim Laden werden fehlende Einträge ergänzt, nichts wird überschrieben.</p>
     <p class="hinweis" id="iosHinweis" hidden>iPhone: Die App vom Home-Bildschirm hat einen eigenen Speicher. Den Rechner deshalb immer über das grüne Symbol öffnen, nicht über Safari.</p>
   </section>
   </div><!-- /seiteVerlauf -->
@@ -768,13 +768,13 @@ function zeitraum() {
         pad(letzter.getDate()) + '.' + pad(letzter.getMonth() + 1) + '.' + letzter.getFullYear(),
       pdfTitel: 'Kalenderwoche ' + k.kw + '/' + k.jahr + ' (' + pad(von.getDate()) + '.' + pad(von.getMonth() + 1) + '.' + von.getFullYear() +
         ' - ' + pad(letzter.getDate()) + '.' + pad(letzter.getMonth() + 1) + '.' + letzter.getFullYear() + ')',
-      datei: 'WD-Bericht_' + k.jahr + '-KW' + pad(k.kw) + '.pdf'
+      datei: 'Stundenbericht_' + k.jahr + '-KW' + pad(k.kw) + '.pdf'
     };
   }
   const von = new Date(b.getFullYear(), b.getMonth(), 1);
   const bis = new Date(b.getFullYear(), b.getMonth() + 1, 1);
   const titel = MONATE[von.getMonth()] + ' ' + von.getFullYear();
-  return { von, bis, titel, pdfTitel: titel, datei: 'WD-Bericht_' + von.getFullYear() + '-' + pad(von.getMonth() + 1) + '.pdf' };
+  return { von, bis, titel, pdfTitel: titel, datei: 'Stundenbericht_' + von.getFullYear() + '-' + pad(von.getMonth() + 1) + '.pdf' };
 }
 function eintraegeIn(z) {
   return verlauf.filter(e => { const d = datumAus(e.tag, '12:00'); return d >= z.von && d < z.bis; });
@@ -901,7 +901,7 @@ function berichtDaten(z, liste) {
     };
   });
   return {
-    titel: 'Winterdienst - persönliche Arbeitszeitaufstellung',
+    titel: 'Persönliche Arbeitszeitaufstellung',
     zeitraum: z.pdfTitel,
     zeilen,
     summeText: 'Summe (' + liste.length + (liste.length === 1 ? ' Einsatz)' : ' Einsätze)'),
@@ -911,7 +911,7 @@ function berichtDaten(z, liste) {
       'Arbeitszeit = Anwesenheit ab Anruf abzüglich Pause (mindestens die gesetzliche Pause nach § 4 ArbZG). Uhrzeiten in Viertelstunden.',
       '(+1) = Ende am Folgetag.' + (ueber10 ? ' Rot = mehr als 10 Stunden netto (§ 3 ArbZG).' : '')
     ],
-    erstellt: 'Erstellt am ' + zeitpunktText(new Date()) + ' mit dem WD-Rechner (privates Hilfsmittel).',
+    erstellt: 'Erstellt am ' + zeitpunktText(new Date()) + ' mit dem Stundenrechner (privates Hilfsmittel).',
     massgeblich: 'Maßgeblich sind ZMI und der Stundenzettel.',
     datei: z.datei
   };
@@ -1089,7 +1089,7 @@ function renderSicherung() {
 
 async function sichern(btn) {
   const daten = { app: 'wd-rechner', format: 1, erstellt: new Date().toISOString(), eintraege: verlauf };
-  const name = 'WD-Sicherung.json'; // immer gleicher Name: am selben Ort speichern und die alte Datei ersetzen
+  const name = 'Stundenrechner-Sicherung.json'; // immer gleicher Name: am selben Ort speichern und die alte Datei ersetzen
   const blob = new Blob([JSON.stringify(daten, null, 1)], { type: 'application/json' });
   const r = await teileDatei(blob, name, 'application/json');
   if (r === 'abgebrochen') return;
@@ -1127,7 +1127,7 @@ $('ladenDatei').addEventListener('change', async ev => {
       : 'Nichts Neues – alle ' + da + ' Einträge der Sicherung sind schon vorhanden.');
     renderAlles();
   } catch (e) {
-    meldung($('verlaufMeldung'), 'Die Datei ist keine gültige Sicherung des WD-Rechners.', true);
+    meldung($('verlaufMeldung'), 'Die Datei ist keine gültige Sicherung des Stundenrechners.', true);
   }
 });
 
