@@ -28,7 +28,7 @@ Alle Daten bleiben im Browser des jeweiligen Handys (localStorage). Es gibt kein
 
 ## Änderungen veröffentlichen
 
-Nach jeder Änderung in `sw.js` die Zeile `const CACHE = 'wd-rechner-v8';` hochzählen (v9, v10 …).
+Nach jeder Änderung in `sw.js` die Zeile `const CACHE = 'wd-rechner-v9';` hochzählen (v10, v11 …).
 Sonst sehen Handys, auf denen die App schon installiert ist, die neue Version nicht.
 
 ## Dateien

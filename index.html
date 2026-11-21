@@ -728,7 +728,7 @@ function renderEinsatz() {
     ? 'läuft <span class="tag">(gerechnet bis ' + uhr(ende) + ')</span>'
     : uhrMitTag(ende, start) + ' Uhr';
   $('zPause').textContent = r.pause + ' Min.';
-  $('zStunden').textContent = hmText(r.netto) + ' Std. = ' + dez(r.netto);
+  $('zStunden').textContent = dez(r.netto) + ' Std.'; // Stundenzettel: nur Dezimalstunden
   const notiz = (st.notiz || '').trim();
   $('zNotizZeile').hidden = !notiz;
   $('zNotiz').textContent = notiz;
